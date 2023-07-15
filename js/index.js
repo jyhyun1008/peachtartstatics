@@ -20,9 +20,13 @@ if (qs.msg) { // 작성할 때
     const msg = qs.msg
     localStorage.setItem('msg', msg);
 }
-if (qs.hstg) { // 삭제할 때 - 해시태그 검색기능을 이용할 거예요.
-    const hstg = qs.hstg
-    localStorage.setItem('hstg', hstg);
+if (qs.tag) { // 삭제할 때 - 해시태그 검색기능을 이용할 거예요.
+    const tag = qs.tag
+    localStorage.setItem('tag', tag);
+}
+if (qs.username) {
+    const userName = qs.username
+    localStorage.setItem('userName', userName);
 }
 
 var host
@@ -150,87 +154,90 @@ if (host) {
                     if (idRes.username) {
                         var myUserName = idRes.username
 
-                        if (localStorage.getItem('hstg')) { // 노트 읽고 지우기
-                            const hstg = localStorage.getItem('hstg')
-                            const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
-                            const noteReadParam = {
-                                headers: {
-                                    'content-type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    tag: hstg
-                                }),
-                                method: 'POST'
-                            }
-
-                            fetch(noteReadUrl, noteReadParam)
-                            .then((noteData) => {return noteData.json()})
-                            .then((noteRes) => {
-                                console.log(noteRes)
-                                var deleteNoteId
-                                for (var j = 0; j < noteRes.length; j++){
-                                    if (noteRes.user.username == myUserName) {
-                                        deleteNoteId = noteRes.id
-                                        break
-                                    }
+                        if (myUserName == localStorage.getItem('userName')) { // 계정 이름들이 서로 일치할 때
+                            if (localStorage.getItem('tag')) { // 노트 읽고 지우기
+                                const tag = localStorage.getItem('tag')
+                                const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
+                                const noteReadParam = {
+                                    headers: {
+                                        'content-type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        tag: tag
+                                    }),
+                                    method: 'POST'
                                 }
-                                const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
-                                const noteDeleteParam = {
+    
+                                fetch(noteReadUrl, noteReadParam)
+                                .then((noteData) => {return noteData.json()})
+                                .then((noteRes) => {
+                                    console.log(noteRes)
+                                    var deleteNoteId
+                                    for (var j = 0; j < noteRes.length; j++){
+                                        if (noteRes.user.username == myUserName) {
+                                            deleteNoteId = noteRes.id
+                                            break
+                                        }
+                                    }
+                                    const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
+                                    const noteDeleteParam = {
+                                        headers: {
+                                            'content-type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            i: i,
+                                            noteId: deleteNoteId
+                                        }),
+                                        credentials: 'omit',
+                                        method: 'POST'
+                                    }
+    
+                                    fetch(noteDeleteUrl, noteDeleteParam)
+                                    .then((deleteData) => {return deleteData.json()})
+                                    .then((deleteRes) => {})
+                                    .catch((error) => console.log(error));
+                                })
+                                .catch((error) => console.log(error));
+                            }
+    
+                            if (localStorage.getItem('msg')) { // 노트 쓰기
+                                var msg = localStorage.getItem('msg')
+                                const noteCreateUrl = 'https://'+host+'/api/notes/create'
+                                if (localStorage.getItem('tag')) {
+                                    msg = msg + "\n" + localStorage.getItem('tag')
+                                }
+                                const noteCreateParam = {
                                     headers: {
                                         'content-type': 'application/json',
                                     },
                                     body: JSON.stringify({
                                         i: i,
-                                        noteId: deleteNoteId
+                                        text: msg
                                     }),
                                     credentials: 'omit',
                                     method: 'POST'
                                 }
-
-                                fetch(noteDeleteUrl, noteDeleteParam)
-                                .then((deleteData) => {return deleteData.json()})
-                                .then((deleteRes) => {
-                                    console.log(deleteRes)
+    
+                                fetch(noteCreateUrl, noteCreateParam)
+                                .then((noteData) => {return noteData.json()})
+                                .then((noteRes) => {
+                                    console.log(noteRes)
+                                    localStorage.removeItem('tag');
+                                    localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
                                 })
                                 .catch((error) => console.log(error));
-                            })
-                            .catch((error) => console.log(error));
-                        }
-
-                        if (localStorage.getItem('msg')) { // 노트 쓰기
-                            const msg = localStorage.getItem('msg')
-                            const noteCreateUrl = 'https://'+host+'/api/notes/create'
-                            const noteCreateParam = {
-                                headers: {
-                                    'content-type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    i: i,
-                                    text: msg
-                                }),
-                                credentials: 'omit',
-                                method: 'POST'
                             }
-
-                            fetch(noteCreateUrl, noteCreateParam)
-                            .then((noteData) => {return noteData.json()})
-                            .then((noteRes) => {
-                                console.log(noteRes)
-                            })
-                            .catch((error) => console.log(error));
+    
+                            location.href = 'https://'+host
+                        } else {
+                            document.querySelector('#post').innerHTML = '작성한 계정 이름과 로그인된 계정이 달라요!' // 잘못된 계정이름
                         }
-
-                        location.href = 'https://'+host
                     }
                 })
                 .catch((error) => console.log(error));
             }
         })
         .catch((error) => console.log(error))
-    }
-
-    if (localStorage.getItem('hstg')) { // 노트 지우기
-
     }
 } else {
     document.querySelector('#post').innerHTML = '그리고 아무 일도 일어나지 않았다....(인스턴스 주소를 써주세요!)' // 둘다 없으면 아무 일도 일어나지 않아요

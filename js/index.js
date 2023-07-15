@@ -121,8 +121,8 @@ if (!host) {
                     .then((idData) => {return idData.json()})
                     .then((idRes) => {
                         console.log(idRes)
-                        if (idRes.id) {
-                            var myId = idRes
+                        if (idRes.username) {
+                            var myId = idRes.username
                             const noteCreateUrl = 'https://'+host+'/api/notes/create'
                             const noteCreateParam = {
                                 headers: {

@@ -106,7 +106,9 @@ if (!host && !token) {
                 headers: {
                     'content-type': 'application/json',
                 },
-                body: JSON.stringify({}),
+                body: JSON.stringify({
+                    i: i
+                }),
                 credentials: 'omit'
             }
             

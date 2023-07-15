@@ -179,23 +179,25 @@ if (host) {
                                                 break
                                             }
                                         }
-                                        const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
-                                        const noteDeleteParam = {
-                                            headers: {
-                                                'content-type': 'application/json',
-                                            },
-                                            body: JSON.stringify({
-                                                i: i,
-                                                noteId: deleteNoteId
-                                            }),
-                                            credentials: 'omit',
-                                            method: 'POST'
+                                        if (deleteNoteId) {
+                                            const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
+                                            const noteDeleteParam = {
+                                                headers: {
+                                                    'content-type': 'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                    i: i,
+                                                    noteId: deleteNoteId
+                                                }),
+                                                credentials: 'omit',
+                                                method: 'POST'
+                                            }
+            
+                                            fetch(noteDeleteUrl, noteDeleteParam)
+                                            .then((deleteData) => {return deleteData.json()})
+                                            .then((deleteRes) => {})
+                                            .catch((error) => console.log(error));
                                         }
-        
-                                        fetch(noteDeleteUrl, noteDeleteParam)
-                                        .then((deleteData) => {return deleteData.json()})
-                                        .then((deleteRes) => {})
-                                        .catch((error) => console.log(error));
                                     })
                                     .catch((error) => console.log(error));
                                 }
@@ -204,7 +206,7 @@ if (host) {
                                     var msg = localStorage.getItem('msg')
                                     const noteCreateUrl = 'https://'+host+'/api/notes/create'
                                     if (localStorage.getItem('tag')) {
-                                        msg = msg + "\n" + localStorage.getItem('tag')
+                                        msg = msg + "\n#" + localStorage.getItem('tag')
                                     }
                                     const noteCreateParam = {
                                         headers: {

@@ -32,6 +32,7 @@ if (qs.username) {
 var host
 if (qs.host) { // 쿼리스트링에 host가 있으면 그게 우선-적
     host = qs.host
+    localStorage.setItem('host', host);
 } else if (localStorage.getItem('host')) { // 없으면 로컬에 저장된 거 갖다씀
     host = localStorage.getItem('host')
 }

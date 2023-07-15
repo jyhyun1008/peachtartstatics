@@ -247,7 +247,7 @@ if (host) {
                             })
                             .catch((error) => console.log(error));
                         } else {
-                            location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authId='+localStorage.getItem('authId')
+                            location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authid='+localStorage.getItem('authId')
                         }
                     }
                 })

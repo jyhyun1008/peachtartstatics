@@ -5,21 +5,50 @@
     font-style: normal;
 }
 
-body{
+body  {
     font-family: 'SUITE-Regular';
-    background-color: #000;
+    background-image: url('https://images.food52.com/44aM8ZyfBUOPXWJRRYJ0O275LSY=/2016x1344/filters:format(webp)/1306fcea-fb6d-45ec-8d00-a1af7da8fd0c--2011-0822_peach-tart_james-ransom_4118.jpg');
+  background-size:cover;
+        -webkit-animation: slidein 100s;
+        animation: slidein 100s;
+
+        -webkit-animation-fill-mode: forwards;
+        animation-fill-mode: forwards;
+
+        -webkit-animation-iteration-count: infinite;
+        animation-iteration-count: infinite;
+
+        -webkit-animation-direction: alternate;
+        animation-direction: alternate;              
+}
+
+@-webkit-keyframes slidein {
+from {background-position: top; background-size:3000px; }
+to {background-position: -100px 0px;background-size:2750px;}
+}
+
+@keyframes slidein {
+from {background-position: top;background-size:3000px; }
+to {background-position: -100px 0px;background-size:2750px;}
+
 }
 
 .flex {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px;
-    margin-top: calc(50vh - 50px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: #ff989a97;
+  border-radius: 3px;
 }
 
-#post{
+#post {
     font-size: 26px;
-    color: #FF9899;
-    margin: auto;
+  text-align:center;
+  color:white;
 }

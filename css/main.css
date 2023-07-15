@@ -1,0 +1,17 @@
+body{
+    background-color: #000;
+}
+
+.flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    margin-top: calc(50vh - 50px);
+}
+
+#post{
+    font-size: 26px;
+    color: #FF9899;
+    margin: auto;
+}

@@ -230,6 +230,8 @@ if (host) {
                                         location.href = 'https://'+host
                                     })
                                     .catch((error) => console.log(error));
+                                } else {
+                                    document.querySelector('#post').innerHTML = '노트할 내용이 지정되지 않았어요.' // msg 없음
                                 }
         
                             } else {

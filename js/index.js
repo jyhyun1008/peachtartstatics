@@ -130,7 +130,7 @@ if (!host) {
                                 },
                                 body: JSON.stringify({
                                     i: i,
-                                    text: "냐옹 #"+myId+"PeachtaRoom"
+                                    text: "냐옹 #"+myId+"_PeachtaRoom"
                                 }),
                                 credentials: 'omit',
                                 method: 'POST'

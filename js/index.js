@@ -106,7 +106,8 @@ if (!host && !token) {
                 headers: {
                     'content-type': 'application/json',
                 },
-                body: JSON.stringify({})
+                body: JSON.stringify({}),
+                credentials: 'omit'
             }
             
             fetch(findIdUrl, findIdParam)

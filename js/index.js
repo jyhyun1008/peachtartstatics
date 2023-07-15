@@ -132,7 +132,10 @@ if (!host && !token) {
                     }
                     fetch(noteCreateUrl, noteCreateParam)
                     .then((noteData) => {return noteData.json()})
-                    .then((noteRes) => {console.log(noteRes)})
+                    .then((noteRes) => {
+                        console.log(noteRes)
+                        location.href = 'https://'+host
+                    })
                     .catch((error) => console.log(error));
                 }
             })

@@ -168,6 +168,7 @@ if (host) {
                             .then((myAppRes) => {
                                 console.log(myAppRes)
                                 localStorage.setItem('authId', myAppRes.id)
+                                location.href = 'https://yeojibur.in/peachtartstatics'
                             })
                         }
 

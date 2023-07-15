@@ -15,133 +15,223 @@ function getQueryStringObject() {
 
 var qs = getQueryStringObject();
 
-var host = qs.host;
-var token = qs.token;
-
-if (!host && !token) {
-
-    document.querySelector('#post').innerHTML = '그리고 아무 일도 일어나지 않았다....(인스턴스 주소를 써주세요!)'
-
-} else if (host && !token) { // 새로 App을 만들겁니당
-
-    localStorage.setItem('host', host);
-
-    const appCreateUrl = 'https://'+host+'/api/app/create'
-    const appCreateParam = {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-            name: "PeachtaRoom",
-            description: "방을 꾸미고 놀 수 있는 플레이입니다. 인테리어를 불러오는 데에 유저들의 노트를 사용하기에, 노트를 자동 작성하기 위한 앱을 작성합니다.",
-            permission: ["write:notes"],
-            callbackUrl: 'https://yeojibur.in/peachtartstatics',
-        })
-    }
-
-    fetch(appCreateUrl, appCreateParam)
-    .then((createdAppData) => {return createdAppData.json()})
-    .then((createdAppRes) => {
-        console.log(createdAppRes)
-        if (createdAppRes.secret) {
-            var appSecret = createdAppRes.secret
-
-            localStorage.setItem('appSecret', appSecret);
-
-            const generateSessionUrl = 'https://'+host+'/api/auth/session/generate'
-            const generateSessionParam = {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({
-                    appSecret: appSecret
-                })
-            }
-
-            fetch(generateSessionUrl, generateSessionParam)
-            .then((sessionData) => {return sessionData.json()})
-            .then((sessionRes) => {
-                console.log(sessionRes)
-                if (sessionRes.token) {
-                    var token = sessionRes.token
-                    var authUrl = sessionRes.url
-                    location.href = authUrl
-                }
-            })
-            .catch((error) => console.log(error));
-        }
-    })
-    .catch((error) => console.log(error));
-
-} else if (token) {
-
-    const host = localStorage.getItem('host');
-    const appSecret = localStorage.getItem('appSecret');
-
-    const userKeyUrl = 'https://'+host+'/api/auth/session/userkey'
-    const userKeyParam = {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-            appSecret: appSecret,
-            token: token
-        })
-    }
-
-    fetch(userKeyUrl, userKeyParam)
-    .then((userKeyData) => {return userKeyData.json()})
-    .then((userKeyRes) => {
-        console.log(userKeyRes)
-        if (userKeyRes.accessToken) {
-            var accessToken = userKeyRes.accessToken
-            const i = CryptoJS.SHA256(accessToken + appSecret).toString(CryptoJS.enc.Hex);
-            console.log(i)
-            const findIdUrl = 'https://'+host+'/api/i'
-            const findIdParam = {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({
-                    i: i
-                }),
-                credentials: 'omit'
-            }
-            
-            fetch(findIdUrl, findIdParam)
-            .then((idData) => {return idData.json()})
-            .then((idRes) => {
-                console.log(idRes)
-                if (idRes.username) {
-                    var myId = idRes.username
-                    const noteCreateUrl = 'https://'+host+'/api/notes/create'
-                    const noteCreateParam = {
-                        headers: {
-                            'content-type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            i: i,
-                            text: "냐옹 #"+myId+"_PeachtaRoom"
-                        }),
-                        credentials: 'omit',
-                        method: 'POST'
-                    }
-                    fetch(noteCreateUrl, noteCreateParam)
-                    .then((noteData) => {return noteData.json()})
-                    .then((noteRes) => {
-                        console.log(noteRes)
-                        location.href = 'https://'+host
-                    })
-                    .catch((error) => console.log(error));
-                }
-            })
-            .catch((error) => console.log(error));
-        }
-    })
-    .catch((error) => console.log(error))
+// 기본적으로 노트를 작성하고 삭제하는 기능 외에는 쓰지 않습니다!
+if (qs.msg) { // 작성할 때
+    const msg = qs.msg
+    localStorage.setItem('msg', msg);
+}
+if (qs.hstg) { // 삭제할 때 - 해시태그 검색기능을 이용할 거예요.
+    const hstg = qs.hstg
+    localStorage.setItem('hstg', hstg);
 }
 
+var host
+if (qs.host) { // 쿼리스트링에 host가 있으면 그게 우선-적
+    host = qs.host
+} else if (localStorage.getItem('host')) { // 없으면 로컬에 저장된 거 갖다씀
+    host = localStorage.getItem('host')
+}
+
+if (host) {
+    if (localStorage.getItem('appSecret') && !qs.token) { // localStorage에 appSecret이 저장되어 있는데 토큰이 없으면 새로 앱을 만들지는 않고 인증만 진행합니다. 인증하는 데서 이 페이지의 역할은 끝.
+        const appSecret = localStorage.getItem('appSecret')
+        const generateSessionUrl = 'https://'+host+'/api/auth/session/generate'
+        const generateSessionParam = {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                appSecret: appSecret
+            })
+        }
+
+        fetch(generateSessionUrl, generateSessionParam)
+        .then((sessionData) => {return sessionData.json()})
+        .then((sessionRes) => {
+            console.log(sessionRes)
+            if (sessionRes.url) {
+                var authUrl = sessionRes.url
+                location.href = authUrl
+            }
+        })
+        .catch((error) => console.log(error));
+    } else if (!localStorage.getItem('appSecret')) { // localStorage에 appSecret이 저장되어 있지 않으면 토큰이 있든 말든 상관없이 새로 앱을 만듭니다. 인증하는 데서 이 페이지의 역할은 끝.
+        const appCreateUrl = 'https://'+host+'/api/app/create'
+        const appCreateParam = {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: "PeachtaRoom",
+                description: "방을 꾸미고 놀 수 있는 플레이입니다. 인테리어를 불러오는 데에 유저들의 노트를 사용하기에, 노트를 자동 작성하기 위한 앱을 작성합니다.",
+                permission: ["write:notes"],
+                callbackUrl: 'https://yeojibur.in/peachtartstatics',
+            })
+        }
+    
+        fetch(appCreateUrl, appCreateParam)
+        .then((createdAppData) => {return createdAppData.json()})
+        .then((createdAppRes) => {
+            console.log(createdAppRes)
+            if (createdAppRes.secret) {
+                var appSecret = createdAppRes.secret
+    
+                localStorage.setItem('appSecret', appSecret);
+    
+                const generateSessionUrl = 'https://'+host+'/api/auth/session/generate'
+                const generateSessionParam = {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        appSecret: appSecret
+                    })
+                }
+    
+                fetch(generateSessionUrl, generateSessionParam)
+                .then((sessionData) => {return sessionData.json()})
+                .then((sessionRes) => {
+                    console.log(sessionRes)
+                    if (sessionRes.url) {
+                        var authUrl = sessionRes.url
+                        location.href = authUrl
+                    }
+                })
+                .catch((error) => console.log(error));
+            }
+        })
+        .catch((error) => console.log(error));
+    }
+} else if (localStorage.getItem('appSecret') && qs.token) { //appsecret과 token 이 둘다 있는경우 새로 앱을 만들지 않고 인증도 하지 않습니다
+    const token = qs.token
+
+    if (localStorage.getItem('msg')) { // 노트 쓰기
+        const appSecret = localStorage.getItem('appSecret');
+
+        const userKeyUrl = 'https://'+host+'/api/auth/session/userkey'
+        const userKeyParam = {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                appSecret: appSecret,
+                token: token
+            })
+        }
+    
+        fetch(userKeyUrl, userKeyParam)
+        .then((userKeyData) => {return userKeyData.json()})
+        .then((userKeyRes) => {
+            console.log(userKeyRes)
+            if (userKeyRes.accessToken) {
+                var accessToken = userKeyRes.accessToken
+                const i = CryptoJS.SHA256(accessToken + appSecret).toString(CryptoJS.enc.Hex);
+                console.log(i)
+                const findIdUrl = 'https://'+host+'/api/i'
+                const findIdParam = {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        i: i
+                    }),
+                    credentials: 'omit'
+                }
+                
+                fetch(findIdUrl, findIdParam)
+                .then((idData) => {return idData.json()})
+                .then((idRes) => {
+                    console.log(idRes)
+                    if (idRes.username) {
+                        var myUserName = idRes.username
+
+                        if (localStorage.getItem('hstg')) { // 노트 읽고 지우기
+                            const hstg = localStorage.getItem('hstg')
+                            const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
+                            const noteReadParam = {
+                                headers: {
+                                    'content-type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    tag: hstg
+                                }),
+                                method: 'POST'
+                            }
+
+                            fetch(noteReadUrl, noteReadParam)
+                            .then((noteData) => {return noteData.json()})
+                            .then((noteRes) => {
+                                console.log(noteRes)
+                                var deleteNoteId
+                                for (var j = 0; j < noteRes.length; j++){
+                                    if (noteRes.user.username == myUserName) {
+                                        deleteNoteId = noteRes.id
+                                        break
+                                    }
+                                }
+                                const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
+                                const noteDeleteParam = {
+                                    headers: {
+                                        'content-type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        i: i,
+                                        noteId: deleteNoteId
+                                    }),
+                                    credentials: 'omit',
+                                    method: 'POST'
+                                }
+
+                                fetch(noteDeleteUrl, noteDeleteParam)
+                                .then((deleteData) => {return deleteData.json()})
+                                .then((deleteRes) => {
+                                    console.log(deleteRes)
+                                })
+                                .catch((error) => console.log(error));
+                            })
+                            .catch((error) => console.log(error));
+                        }
+
+                        if (localStorage.getItem('msg')) { // 노트 쓰기
+                            const msg = localStorage.getItem('msg')
+                            const noteCreateUrl = 'https://'+host+'/api/notes/create'
+                            const noteCreateParam = {
+                                headers: {
+                                    'content-type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    i: i,
+                                    text: msg
+                                }),
+                                credentials: 'omit',
+                                method: 'POST'
+                            }
+
+                            fetch(noteCreateUrl, noteCreateParam)
+                            .then((noteData) => {return noteData.json()})
+                            .then((noteRes) => {
+                                console.log(noteRes)
+                            })
+                            .catch((error) => console.log(error));
+                        }
+
+                        location.href = 'https://'+host
+                    }
+                })
+                .catch((error) => console.log(error));
+            }
+        })
+        .catch((error) => console.log(error))
+    }
+
+    if (localStorage.getItem('hstg')) { // 노트 지우기
+
+    }
+} else {
+    document.querySelector('#post').innerHTML = '그리고 아무 일도 일어나지 않았다....(인스턴스 주소를 써주세요!)' // 둘다 없으면 아무 일도 일어나지 않아요
+}

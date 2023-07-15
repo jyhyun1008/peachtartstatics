@@ -109,137 +109,138 @@ if (host) {
             }
         })
         .catch((error) => console.log(error));
-    }
-} else if (localStorage.getItem('appSecret') && qs.token) { //appsecret과 token 이 둘다 있는경우 새로 앱을 만들지 않고 인증도 하지 않습니다
-    const token = qs.token
-
-    if (localStorage.getItem('msg')) { // 노트 쓰기
-        const appSecret = localStorage.getItem('appSecret');
-
-        const userKeyUrl = 'https://'+host+'/api/auth/session/userkey'
-        const userKeyParam = {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({
-                appSecret: appSecret,
-                token: token
-            })
-        }
+    } else if (localStorage.getItem('appSecret') && qs.token) { //appsecret과 token 이 둘다 있는경우 새로 앱을 만들지 않고 인증도 하지 않습니다
+        const token = qs.token
     
-        fetch(userKeyUrl, userKeyParam)
-        .then((userKeyData) => {return userKeyData.json()})
-        .then((userKeyRes) => {
-            console.log(userKeyRes)
-            if (userKeyRes.accessToken) {
-                var accessToken = userKeyRes.accessToken
-                const i = CryptoJS.SHA256(accessToken + appSecret).toString(CryptoJS.enc.Hex);
-                console.log(i)
-                const findIdUrl = 'https://'+host+'/api/i'
-                const findIdParam = {
-                    method: 'POST',
-                    headers: {
-                        'content-type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        i: i
-                    }),
-                    credentials: 'omit'
-                }
-                
-                fetch(findIdUrl, findIdParam)
-                .then((idData) => {return idData.json()})
-                .then((idRes) => {
-                    console.log(idRes)
-                    if (idRes.username) {
-                        var myUserName = idRes.username
-
-                        if (myUserName == localStorage.getItem('userName')) { // 계정 이름들이 서로 일치할 때
-                            if (localStorage.getItem('tag')) { // 노트 읽고 지우기
-                                const tag = localStorage.getItem('tag')
-                                const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
-                                const noteReadParam = {
-                                    headers: {
-                                        'content-type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        tag: tag
-                                    }),
-                                    method: 'POST'
-                                }
+        if (localStorage.getItem('msg')) { // 노트 쓰기
+            const appSecret = localStorage.getItem('appSecret');
     
-                                fetch(noteReadUrl, noteReadParam)
-                                .then((noteData) => {return noteData.json()})
-                                .then((noteRes) => {
-                                    console.log(noteRes)
-                                    var deleteNoteId
-                                    for (var j = 0; j < noteRes.length; j++){
-                                        if (noteRes.user.username == myUserName) {
-                                            deleteNoteId = noteRes.id
-                                            break
-                                        }
+            const userKeyUrl = 'https://'+host+'/api/auth/session/userkey'
+            const userKeyParam = {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                    appSecret: appSecret,
+                    token: token
+                })
+            }
+        
+            fetch(userKeyUrl, userKeyParam)
+            .then((userKeyData) => {return userKeyData.json()})
+            .then((userKeyRes) => {
+                console.log(userKeyRes)
+                if (userKeyRes.accessToken) {
+                    var accessToken = userKeyRes.accessToken
+                    const i = CryptoJS.SHA256(accessToken + appSecret).toString(CryptoJS.enc.Hex);
+                    console.log(i)
+                    const findIdUrl = 'https://'+host+'/api/i'
+                    const findIdParam = {
+                        method: 'POST',
+                        headers: {
+                            'content-type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            i: i
+                        }),
+                        credentials: 'omit'
+                    }
+                    
+                    fetch(findIdUrl, findIdParam)
+                    .then((idData) => {return idData.json()})
+                    .then((idRes) => {
+                        console.log(idRes)
+                        if (idRes.username) {
+                            var myUserName = idRes.username
+    
+                            if (myUserName == localStorage.getItem('userName')) { // 계정 이름들이 서로 일치할 때
+                                if (localStorage.getItem('tag')) { // 노트 읽고 지우기
+                                    const tag = localStorage.getItem('tag')
+                                    const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
+                                    const noteReadParam = {
+                                        headers: {
+                                            'content-type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            tag: tag
+                                        }),
+                                        method: 'POST'
                                     }
-                                    const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
-                                    const noteDeleteParam = {
+        
+                                    fetch(noteReadUrl, noteReadParam)
+                                    .then((noteData) => {return noteData.json()})
+                                    .then((noteRes) => {
+                                        console.log(noteRes)
+                                        var deleteNoteId
+                                        for (var j = 0; j < noteRes.length; j++){
+                                            if (noteRes.user.username == myUserName) {
+                                                deleteNoteId = noteRes.id
+                                                break
+                                            }
+                                        }
+                                        const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
+                                        const noteDeleteParam = {
+                                            headers: {
+                                                'content-type': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                i: i,
+                                                noteId: deleteNoteId
+                                            }),
+                                            credentials: 'omit',
+                                            method: 'POST'
+                                        }
+        
+                                        fetch(noteDeleteUrl, noteDeleteParam)
+                                        .then((deleteData) => {return deleteData.json()})
+                                        .then((deleteRes) => {})
+                                        .catch((error) => console.log(error));
+                                    })
+                                    .catch((error) => console.log(error));
+                                }
+        
+                                if (localStorage.getItem('msg')) { // 노트 쓰기
+                                    var msg = localStorage.getItem('msg')
+                                    const noteCreateUrl = 'https://'+host+'/api/notes/create'
+                                    if (localStorage.getItem('tag')) {
+                                        msg = msg + "\n" + localStorage.getItem('tag')
+                                    }
+                                    const noteCreateParam = {
                                         headers: {
                                             'content-type': 'application/json',
                                         },
                                         body: JSON.stringify({
                                             i: i,
-                                            noteId: deleteNoteId
+                                            text: msg
                                         }),
                                         credentials: 'omit',
                                         method: 'POST'
                                     }
+        
+                                    fetch(noteCreateUrl, noteCreateParam)
+                                    .then((noteData) => {return noteData.json()})
+                                    .then((noteRes) => {
+                                        console.log(noteRes)
+                                        localStorage.removeItem('tag');
+                                        localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
     
-                                    fetch(noteDeleteUrl, noteDeleteParam)
-                                    .then((deleteData) => {return deleteData.json()})
-                                    .then((deleteRes) => {})
+                                        location.href = 'https://'+host
+                                    })
                                     .catch((error) => console.log(error));
-                                })
-                                .catch((error) => console.log(error));
-                            }
-    
-                            if (localStorage.getItem('msg')) { // 노트 쓰기
-                                var msg = localStorage.getItem('msg')
-                                const noteCreateUrl = 'https://'+host+'/api/notes/create'
-                                if (localStorage.getItem('tag')) {
-                                    msg = msg + "\n" + localStorage.getItem('tag')
                                 }
-                                const noteCreateParam = {
-                                    headers: {
-                                        'content-type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        i: i,
-                                        text: msg
-                                    }),
-                                    credentials: 'omit',
-                                    method: 'POST'
-                                }
-    
-                                fetch(noteCreateUrl, noteCreateParam)
-                                .then((noteData) => {return noteData.json()})
-                                .then((noteRes) => {
-                                    console.log(noteRes)
-                                    localStorage.removeItem('tag');
-                                    localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
-                                })
-                                .catch((error) => console.log(error));
+        
+                            } else {
+                                document.querySelector('#post').innerHTML = '작성한 계정 이름과 로그인된 계정이 달라요!' // 잘못된 계정이름
                             }
-    
-                            location.href = 'https://'+host
-                        } else {
-                            document.querySelector('#post').innerHTML = '작성한 계정 이름과 로그인된 계정이 달라요!' // 잘못된 계정이름
                         }
-                    }
-                })
-                .catch((error) => console.log(error));
-            }
-        })
-        .catch((error) => console.log(error))
-    }
+                    })
+                    .catch((error) => console.log(error));
+                }
+            })
+            .catch((error) => console.log(error))
+        }
+    } 
 } else {
     document.querySelector('#post').innerHTML = '그리고 아무 일도 일어나지 않았다....(인스턴스 주소를 써주세요!)' // 둘다 없으면 아무 일도 일어나지 않아요
 }

@@ -20,6 +20,10 @@ if (qs.msg) { // 작성할 때
     const msg = qs.msg
     localStorage.setItem('msg', msg);
 }
+if (qs.cw) {
+    const cw = qs.cw
+    localStorage.setItem('cw', cw);
+}
 if (qs.tag) { // 삭제할 때 - 해시태그 검색기능을 이용할 거예요.
     const tag = qs.tag
     localStorage.setItem('tag', tag);
@@ -225,12 +229,18 @@ if (host) {
                             if (localStorage.getItem('tag')) {
                                 msg = msg + "\n#" + localStorage.getItem('tag')
                             }
+                            var cw = null
+                            if (localStorage.getItem('cw')) {
+                                cw = localStorage.getItem('cw')
+                            }
                             const noteCreateParam = {
                                 headers: {
                                     'content-type': 'application/json',
                                 },
                                 body: JSON.stringify({
                                     i: i,
+                                    cw: cw,
+                                    visibility: 'home',
                                     text: msg
                                 }),
                                 credentials: 'omit',

@@ -32,7 +32,7 @@ if (qs.tag) { // 삭제할 때 - 해시태그 검색기능을 이용할 거예�
 var host
 if (qs.host) { // 쿼리스트링에 host가 있으면 그게 우선-적
     host = qs.host
-    if (host == localStorage.getItem('host')) {
+    if (host != localStorage.getItem('host')) {
         localStorage.clear()
     }
     localStorage.setItem('host', host);

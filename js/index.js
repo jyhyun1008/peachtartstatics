@@ -8,7 +8,7 @@ function getQueryStringObject() {
         if (p.length == 1)
             b[p[0]] = "";
         else
-            b[p[0].replace(/\?/g, "")] = decodeURIComponent(p[1].replace(/\+/g, " ").replace(/\@/g, "&h="));
+            b[p[0].replace(/\?/g, "")] = decodeURIComponent(p[1].replace(/\@/g, "&h="));
     }
     return b;
 }

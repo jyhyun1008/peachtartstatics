@@ -114,7 +114,7 @@ var asciiCharStr = asciiChars.join()
 
 @NewNote(username, host, cw, txt) {
 	
-    let text = `{encodeShift(txt, Date:now(), user_id)}{Str:lf}#{username}_PeachtaRoom`
+    let text = encodeShift(txt, Date:now(), user_id)
 	if host == null {
 		let notes = Mk:api("notes/search-by-tag" { tag: [username "_PeachtaRoom"].join(), limit: 10, })
 		let isLast = 0
@@ -138,10 +138,10 @@ var asciiCharStr = asciiChars.join()
 		Mk:api('notes/create' {
 			cw: cw,
 			visibility: 'home',
-			text: text
+			text: `{text}{Str:lf}#{username}_PeachtaRoom`
 		}, accessToken)
 	} else {
-        //Mk:dialog(null `https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`.len.to_str())
+        //Mk:dialog(null `https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`)
 		Mk:open_url(`https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`)
 	}
 }
@@ -435,7 +435,7 @@ if (roomName != null) {
 												]
 											})
 											reLoadRoom(itemsSaved)
-                                            NewNote(name, host, `[피치타룸의 인테리어를 변경했습니다!](https://room.peacht.art?id={name}&h={hostText})`, saveNoteText())
+                                            NewNote(name, host, `피치타룸의 인테리어를 변경했습니다!`, saveNoteText())
 										}
 									}
 								]

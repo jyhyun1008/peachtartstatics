@@ -209,8 +209,8 @@ if (host) {
                                     console.log(noteRes)
                                     var deleteNoteId
                                     for (var j = 0; j < noteRes.length; j++){
-                                        if (noteRes.user.username == myUserName) {
-                                            deleteNoteId = noteRes.id
+                                        if (noteRes[j].user.username == myUserName) {
+                                            deleteNoteId = noteRes[j].id
                                             break
                                         }
                                     }

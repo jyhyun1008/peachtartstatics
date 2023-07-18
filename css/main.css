@@ -1,12 +1,7 @@
-@font-face {
-    font-family: 'SUITE-Regular';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-}
+@import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
 
 body  {
-    font-family: 'SUITE-Regular';
+    font-family: 'Galmuri11';
     background-image: url('https://images.food52.com/44aM8ZyfBUOPXWJRRYJ0O275LSY=/2016x1344/filters:format(webp)/1306fcea-fb6d-45ec-8d00-a1af7da8fd0c--2011-0822_peach-tart_james-ransom_4118.jpg');
   background-size:cover;
         -webkit-animation: slidein 100s;

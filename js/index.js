@@ -230,52 +230,57 @@ if (host) {
             
                                         fetch(noteDeleteUrl, noteDeleteParam)
                                         .then((deleteData) => {return deleteData.json()})
-                                        .then((deleteRes) => {})
+                                        .then((deleteRes) => {
+                                            writemsg(i)
+                                        })
                                         .catch((error) => console.log(error));
                                     }
                                 })
                                 .catch((error) => console.log(error));
-                            }
-        
-                            if (localStorage.getItem('msg')) { // 노트 쓰기
-                                var msg = localStorage.getItem('msg')
-                                const noteCreateUrl = 'https://'+host+'/api/notes/create'
-                                if (localStorage.getItem('tag')) {
-                                    msg = msg + "\n#" + localStorage.getItem('tag')
-                                }
-                                var cw = null
-                                if (localStorage.getItem('cw')) {
-                                    cw = localStorage.getItem('cw')
-                                }
-                                const noteCreateParam = {
-                                    headers: {
-                                        'content-type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        i: i,
-                                        cw: cw,
-                                        visibility: 'home',
-                                        text: msg
-                                    }),
-                                    credentials: 'omit',
-                                    method: 'POST'
-                                }
-        
-                                fetch(noteCreateUrl, noteCreateParam)
-                                .then((noteData) => {return noteData.json()})
-                                .then((noteRes) => {
-                                    console.log(noteRes)
-                                    localStorage.removeItem('tag');
-                                    localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
-    
-                                    location.href = 'https://'+host
-                                })
-                                .catch((error) => console.log(error));
                             } else {
-                                location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authid='+localStorage.getItem('authId')
+                                writemsg(i)
+                            }
+
+                            function writemsg(i) {
+                                if (localStorage.getItem('msg')) { // 노트 쓰기
+                                    var msg = localStorage.getItem('msg')
+                                    const noteCreateUrl = 'https://'+host+'/api/notes/create'
+                                    if (localStorage.getItem('tag')) {
+                                        msg = msg + "\n#" + localStorage.getItem('tag')
+                                    }
+                                    var cw = null
+                                    if (localStorage.getItem('cw')) {
+                                        cw = localStorage.getItem('cw')
+                                    }
+                                    const noteCreateParam = {
+                                        headers: {
+                                            'content-type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            i: i,
+                                            cw: cw,
+                                            visibility: 'home',
+                                            text: msg
+                                        }),
+                                        credentials: 'omit',
+                                        method: 'POST'
+                                    }
+            
+                                    fetch(noteCreateUrl, noteCreateParam)
+                                    .then((noteData) => {return noteData.json()})
+                                    .then((noteRes) => {
+                                        console.log(noteRes)
+                                        localStorage.removeItem('tag');
+                                        localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
+        
+                                        location.href = 'https://'+host
+                                    })
+                                    .catch((error) => console.log(error));
+                                } else {
+                                    location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authid='+localStorage.getItem('authId')
+                                }
                             }
                         }
-
                     }
                 })
                 .catch((error) => console.log(error));

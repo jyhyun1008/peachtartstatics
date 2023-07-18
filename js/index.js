@@ -8,7 +8,7 @@ function getQueryStringObject() {
         if (p.length == 1)
             b[p[0]] = "";
         else
-            b[p[0].replace(/\?/g, "").replace(/\@/g, "&h=")] = decodeURIComponent(p[1].replace(/\+/g, " "));
+            b[p[0].replace(/\?/g, "")] = decodeURIComponent(p[1].replace(/\+/g, " ").replace(/\@/g, "&h="));
     }
     return b;
 }
@@ -83,7 +83,7 @@ if (host) {
                 name: "PeachtaRoom",
                 description: "방을 꾸미고 놀 수 있는 플레이입니다. 인테리어를 불러오는 데에 유저들의 노트를 사용하기에, 노트를 자동 작성하기 위한 앱을 작성합니다.",
                 permission: ["write:notes"],
-                callbackUrl: 'https://yeojibur.in/peachtartstatics',
+                callbackUrl: 'https://room.peacht.art',
             })
         }
     
@@ -183,7 +183,7 @@ if (host) {
                             .then((myAppRes) => {
                                 console.log(myAppRes)
                                 localStorage.setItem('authId', myAppRes.id)
-                                location.href = 'https://yeojibur.in/peachtartstatics'
+                                location.href = 'https://room.peacht.art'
                             })
                         } else {
 

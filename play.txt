@@ -56,7 +56,6 @@ if (USER_USERNAME != null) {
 		name = nameAndHost.split('@')[1]
 		host = nameAndHost.split('@')[2]
         hostText = host
-        Mk:dialog(name host)
 		user_id = Mk:api("users/search-by-username-and-host" { username: name, host: host})
         if (user_id.len > 0) {
             user_id = user_id[0].id
@@ -115,8 +114,8 @@ var asciiCharStr = asciiChars.join()
 
 @NewNote(username, host, cw, txt) {
 	
+    let text = `{encodeShift(txt, Date:now(), user_id)}{Str:lf}#{username}_PeachtaRoom`
 	if host == null {
-		let text = `{encodeShift(txt, Date:now(), user_id)}{Str:lf}#{name}_PeachtaRoom`
 		let notes = Mk:api("notes/search-by-tag" { tag: [username "_PeachtaRoom"].join(), limit: 10, })
 		let isLast = 0
 		var noteId = ''
@@ -142,7 +141,8 @@ var asciiCharStr = asciiChars.join()
 			text: text
 		}, accessToken)
 	} else {
-		Mk:open_url(`https://yeojibur.in/peachtartstatics/?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom)`)
+        //Mk:dialog(null `https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`.len.to_str())
+		Mk:open_url(`https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`)
 	}
 }
 
@@ -435,7 +435,7 @@ if (roomName != null) {
 												]
 											})
 											reLoadRoom(itemsSaved)
-                                            NewNote(name, host, `[피치타룸의 인테리어를 변경했습니다!](https://i.peacht.art/play/9h2m6c51tz?username={name}&host={hostText})`, saveNoteText())
+                                            NewNote(name, host, `[피치타룸의 인테리어를 변경했습니다!](https://room.peacht.art?id={name}&h={hostText})`, saveNoteText())
 										}
 									}
 								]
@@ -817,7 +817,10 @@ if (roomName != null) {
 			Ui:C:button({
 				text: "계정 인증"
 					onClick: @() {
-						Mk:dialog('아래 링크로' `?[이동](https://yeojibur.in/peachtartstatics/?host={hostText})`)
+						var accept = Mk:confirm('계정 인증' `확인 버튼을 눌러 계정 인증을 진행합니다.`)
+                        if (accept) {
+                            Mk:open_url(`https://room.peacht.art?host={hostText}`)
+                        }
 					}
 				primary: true
 			})

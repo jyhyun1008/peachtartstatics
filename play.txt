@@ -51,11 +51,18 @@ if (USER_USERNAME != null) {
 } else if (CURRENT_URL.incl('&authid=')) {
 	var authid = CURRENT_URL.split('authid=')[1]
 	var nameAndHost = Mk:api("app/show" { appId: authid }).name
-	if (nameAndHost == `@{roomName}@{roomHost}`) {
+	if (nameAndHost.incl('@')) {
 		isAuthed = true
-		name = roomName
-		host = roomHost
-		user_id = Mk:api("users/search-by-username-and-host" { username: name, host: host}).id
+		name = nameAndHost.split('@')[1]
+		host = nameAndHost.split('@')[2]
+        hostText = host
+        Mk:dialog(name host)
+		user_id = Mk:api("users/search-by-username-and-host" { username: name, host: host})
+        if (user_id.len > 0) {
+            user_id = user_id[0].id
+        } else {
+            Mk:dialog('계정 정보 없음' '해당되는 유저가 검색되지 않습니다.')
+        }
 	}
 }
 
@@ -216,12 +223,6 @@ if (roomName != null) {
 		var myItemsArray = []
 		var items = ''
 		
-		if (notes.len == 0) {
-			myThemeArray = ['ocean' 'peach' 'peach']
-			myItemsArray = [['bed' 'f' 'f' 0 0 0 'n'] ['table' 'f' 'f' 0 0 0 'n'] ['chair' 'f' 'f' 0 0 0 'f']]
-			points = 1000
-		}
-
 		each (let note, notes) {
 			let userName = note.user.username
 			let userHost = null
@@ -247,6 +248,12 @@ if (roomName != null) {
 					}
 				}
 			}
+		}
+
+		if (isLast < 1) {
+			myThemeArray = ['ocean' 'peach' 'peach']
+			myItemsArray = [['bed', 'f', 'f', '0', '0', '0', 'n'] ['table', 'f', 'f', '0', '0', '0', 'n'] ['chair', 'f', 'f', '0', '0', '0', 'f']]
+			points = 1000
 		}
 
 		if (roomId == name) {
@@ -288,8 +295,8 @@ if (roomName != null) {
 		@generateRandomEvent() {
 			if (isAuthed) {
 				randomEvent = true
-				eventCoord(itemsArray)
-				reLoadRoom(itemsArray)
+				eventCoord(itemsSaved)
+				reLoadRoom(itemsSaved)
 			}
 		}
 
@@ -326,7 +333,7 @@ if (roomName != null) {
 						if (avatarX == eventX && avatarY == eventY) {
 							endRandomEvent()
 						}
-						reLoadRoom(itemsArray)
+						reLoadRoom(itemsSaved)
 					}
 				}
 			} {
@@ -338,7 +345,7 @@ if (roomName != null) {
 						if (avatarX == eventX && avatarY == eventY) {
 							endRandomEvent()
 						}
-						reLoadRoom(itemsArray)
+						reLoadRoom(itemsSaved)
 					}
 				}
 			}
@@ -354,7 +361,7 @@ if (roomName != null) {
 						if (avatarX == eventX && avatarY == eventY) {
 							endRandomEvent()
 						}
-						reLoadRoom(itemsArray)
+						reLoadRoom(itemsSaved)
 					}
 				}
 			} {
@@ -366,7 +373,7 @@ if (roomName != null) {
 						if (avatarX == eventX && avatarY == eventY) {
 							endRandomEvent()
 						}
-						reLoadRoom(itemsArray)
+						reLoadRoom(itemsSaved)
 					}
 				}
 			}
@@ -428,6 +435,7 @@ if (roomName != null) {
 												]
 											})
 											reLoadRoom(itemsSaved)
+                                            NewNote(name, host, `[피치타룸의 인테리어를 변경했습니다!](https://i.peacht.art/play/9h2m6c51tz?username={name}&host={hostText})`, saveNoteText())
 										}
 									}
 								]
@@ -779,7 +787,7 @@ if (roomName != null) {
 		}
 		
 
-		reLoadRoom(itemsArray, Mk:load('avatarX'), Mk:load('avatarY'))
+		reLoadRoom(itemsSaved, Mk:load('avatarX'), Mk:load('avatarY'))
 		controllerUpdate()
 		Async:timeout(randInterval(), generateRandomEvent)
 

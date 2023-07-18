@@ -8,7 +8,7 @@ function getQueryStringObject() {
         if (p.length == 1)
             b[p[0]] = "";
         else
-            b[p[0].replace(/\?/g, "")] = decodeURIComponent(p[1].replace(/\+/g, " "));
+            b[p[0].replace(/\?/g, "").replace(/\@/g, "&h=")] = decodeURIComponent(p[1].replace(/\+/g, " "));
     }
     return b;
 }
@@ -35,6 +35,17 @@ if (qs.host) { // 쿼리스트링에 host가 있으면 그게 우선-적
     localStorage.setItem('host', host);
 } else if (localStorage.getItem('host')) { // 없으면 로컬에 저장된 거 갖다씀
     host = localStorage.getItem('host')
+}
+
+var id, h
+if (qs.id) {
+    id = qs.id
+    if (qs.h) {
+        h = qs.h
+    } else {
+        h = 'i.peacht.art'
+    }
+    location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+id+'&host='+h
 }
 
 if (host) {

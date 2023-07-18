@@ -1,0 +1,833 @@
+
+
+//@printnow() {
+  //let now = Date:now()
+  //print(now)
+//}
+
+//Async:interval(1000, printnow, true)
+
+//// @ 0.13.3
+
+let instanceName = "i.peacht.art"
+let defaultAvatar = 'mascot_ver1'
+
+var user_id = USER_ID
+var name = null
+var host = null
+var roomName = null
+var roomHost = null
+var hostText = instanceName
+var roomHostText = instanceName
+var isAuthed = false
+var accessToken = Mk:load('accessToken')
+var token = null
+if (CURRENT_URL.incl('token=')) {
+	token = CURRENT_URL.split('token=')[1]
+}
+
+@open(url) {
+	Mk:open_url(url)
+}
+@move(url) {
+	Mk:move_url(url)
+}
+
+if (USER_USERNAME != null) {
+	name = USER_USERNAME
+	if (accessToken == null && token == null) {
+		var token = Mk:api("auth/session/generate" { appSecret: `QUaxyB8PZa9k0S5McP8w2vPMdTT70hJ9`}).token
+		var confirm = Mk:confirm('권한 허가' '노트 읽기/쓰기')
+		if (confirm) {
+			move(`https://i.peacht.art/auth/{token}`)
+		}
+	} else if (accessToken == null && token != null) { 
+		accessToken = Mk:api("auth/session/userkey" { appSecret: `QUaxyB8PZa9k0S5McP8w2vPMdTT70hJ9`, token: token}).accessToken
+		Mk:save('accessToken' accessToken)
+	    isAuthed = true
+	} else {
+		isAuthed = true
+	}
+} else if (CURRENT_URL.incl('&authid=')) {
+	var authid = CURRENT_URL.split('authid=')[1]
+	var nameAndHost = Mk:api("app/show" { appId: authid }).name
+	if (nameAndHost == `@{roomName}@{roomHost}`) {
+		isAuthed = true
+		name = roomName
+		host = roomHost
+		user_id = Mk:api("users/search-by-username-and-host" { username: name, host: host}).id
+	}
+}
+
+if (CURRENT_URL.incl('?username=') && CURRENT_URL.incl('&host=')) {
+	roomName = CURRENT_URL.split('username=')[1].split('&')[0]
+	roomHostText = CURRENT_URL.split('host=')[1].split('&')[0]
+} else if (CURRENT_URL.incl('?username=') && !CURRENT_URL.incl('&host=')) {
+	roomName = CURRENT_URL.split('username=')[1].split('&')[0]
+} else {
+	roomName = name
+	roomHostText = hostText
+}
+roomHost = if roomHostText == instanceName null else hostText
+
+let frame = `$[x4 $[x2 :room_bg_ocean:]]{Str:lf}$[position.y=-12 $[x2 :isoroom_floor:]]{Str:lf}$[position.y=-13.5 :isoroom_floor:]$[position.y=-13.5 :isoroom_floor:]{Str:lf}$[position.y=-15 :isoroom_floor:]$[position.y=-15 :isoroom_floor:]$[position.y=-15 :isoroom_floor:]{Str:lf}$[position.y=-16.5 :isoroom_floor:]$[position.y=-16.5 :isoroom_floor:]$[position.y=-16.5 :isoroom_floor:]$[position.y=-16.5 :isoroom_floor:]{Str:lf}$[position.y=-18 :isoroom_floor:]$[position.y=-18 :isoroom_floor:]$[position.y=-18 :isoroom_floor:]$[position.y=-18 :isoroom_floor:]$[position.y=-18 :isoroom_floor:]{Str:lf}$[position.y=-19.5 :isoroom_floor:]$[position.y=-19.5 :isoroom_floor:]$[position.y=-19.5 :isoroom_floor:]$[position.y=-19.5 :isoroom_floor:]$[position.y=-19.5 :isoroom_floor:]$[position.y=-19.5 :isoroom_floor:]{Str:lf}$[position.y=-21 :isoroom_floor:]$[position.y=-21 :isoroom_floor:]$[position.y=-21 :isoroom_floor:]$[position.y=-21 :isoroom_floor:]$[position.y=-21 :isoroom_floor:]$[position.y=-21 :isoroom_floor:]$[position.y=-21 :isoroom_floor:]{Str:lf}$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]$[position.y=-22.5 :isoroom_floor:]{Str:lf}$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]$[position.y=-24 :isoroom_floor:]{Str:lf}$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]$[position.y=-25.5 :isoroom_floor:]{Str:lf}$[position.y=-27 :isoroom_floor:]$[position.y=-27 :isoroom_floor:]$[position.y=-27 :isoroom_floor:]$[position.y=-27 :isoroom_floor:]$[position.y=-27 :isoroom_floor:]$[position.y=-27 :isoroom_floor:]$[position.y=-27 :isoroom_floor:]{Str:lf}$[position.y=-28.5 :isoroom_floor:]$[position.y=-28.5 :isoroom_floor:]$[position.y=-28.5 :isoroom_floor:]$[position.y=-28.5 :isoroom_floor:]$[position.y=-28.5 :isoroom_floor:]$[position.y=-28.5 :isoroom_floor:]{Str:lf}$[position.y=-30 :isoroom_floor:]$[position.y=-30 :isoroom_floor:]$[position.y=-30 :isoroom_floor:]$[position.y=-30 :isoroom_floor:]$[position.y=-30 :isoroom_floor:]{Str:lf}$[position.y=-31.5 :isoroom_floor:]$[position.y=-31.5 :isoroom_floor:]$[position.y=-31.5 :isoroom_floor:]$[position.y=-31.5 :isoroom_floor:]{Str:lf}$[position.y=-33 :isoroom_floor:]$[position.y=-33 :isoroom_floor:]$[position.y=-33 :isoroom_floor:]{Str:lf}$[position.y=-34.5 :isoroom_floor:]$[position.y=-34.5 :isoroom_floor:]{Str:lf}$[position.y=-36 :isoroom_floor:]{Str:lf}$[position.y=-47 :isoroom_wall_left:]{Str:lf}$[position.y=-48.5 :isoroom_wall_left:]$[position.y=-48.5 :isoroom_wall_right:]{Str:lf}$[position.y=-50,x=-1 :isoroom_wall_left:]$[position.y=-50,x=1 :isoroom_wall_right:]{Str:lf}$[position.y=-51.5,x=-2 :isoroom_wall_left:]$[position.y=-51.5,x=2 :isoroom_wall_right:]{Str:lf}$[position.y=-53,x=-3 :isoroom_wall_left:]$[position.y=-53,x=3 :isoroom_wall_right:]{Str:lf}$[position.y=-54.5,x=-4 :isoroom_wall_left:]$[position.y=-54.5,x=4 :isoroom_wall_right:]{Str:lf}$[position.y=-56,x=-5 :isoroom_wall_left:]$[position.y=-56,x=5 :isoroom_wall_right:]{Str:lf}$[position.y=-57.5,x=-6 :isoroom_wall_left:]$[position.y=-57.5,x=6 :isoroom_wall_right:]{Str:lf}$[position.y=-59,x=-7 :isoroom_wall_left:]$[position.y=-59,x=7 :isoroom_wall_right:]{Str:lf}$[position.y=-66 :isoroom_wall_left:]{Str:lf}$[position.y=-67.5 :isoroom_wall_left:]$[position.y=-67.5 :isoroom_wall_right:]{Str:lf}$[position.y=-69,x=-1 :isoroom_wall_left:]$[position.y=-69,x=1 :isoroom_wall_right:]{Str:lf}$[position.y=-70.5,x=-2 :isoroom_wall_left:]$[position.y=-70.5,x=2 :isoroom_wall_right:]{Str:lf}$[position.y=-72,x=-3 :isoroom_wall_left:]$[position.y=-72,x=3 :isoroom_wall_right:]{Str:lf}$[position.y=-73.5,x=-4 :isoroom_wall_left:]$[position.y=-73.5,x=4 :isoroom_wall_right:]{Str:lf}$[position.y=-75,x=-5 :isoroom_wall_left:]$[position.y=-75,x=5 :isoroom_wall_right:]{Str:lf}$[position.y=-76.5,x=-6 :isoroom_wall_left:]$[position.y=-76.5,x=6 :isoroom_wall_right:]{Str:lf}$[position.y=-78,x=-7 :isoroom_wall_left:]$[position.y=-78,x=7 :isoroom_wall_right:]{Str:lf}$[position.y=-85 :isoroom_wall_left:]{Str:lf}$[position.y=-86.5 :isoroom_wall_left:]$[position.y=-86.5 :isoroom_wall_right:]{Str:lf}$[position.y=-88,x=-1 :isoroom_wall_left:]$[position.y=-88,x=1 :isoroom_wall_right:]{Str:lf}$[position.y=-89.5,x=-2 :isoroom_wall_left:]$[position.y=-89.5,x=2 :isoroom_wall_right:]{Str:lf}$[position.y=-91,x=-3 :isoroom_wall_left:]$[position.y=-91,x=3 :isoroom_wall_right:]{Str:lf}$[position.y=-92.5,x=-4 :isoroom_wall_left:]$[position.y=-92.5,x=4 :isoroom_wall_right:]{Str:lf}$[position.y=-94,x=-5 :isoroom_wall_left:]$[position.y=-94,x=5 :isoroom_wall_right:]{Str:lf}$[position.y=-95.5,x=-6 :isoroom_wall_left:]$[position.y=-95.5,x=6 :isoroom_wall_right:]{Str:lf}$[position.y=-97,x=-7 :isoroom_wall_left:]$[position.y=-97,x=7 :isoroom_wall_right:]`
+
+let asciiChars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/']
+var asciiCharStr = asciiChars.join()
+
+@encodeShift(txt, date, id) {
+	let seed = `{Date:hour(date)} {Date:minute(date)} {id}`
+	var base64 = Mk:encode(`{txt}`).split('=')[0]
+	let index = Math:floor(Math:gen_rng(seed)()*64)
+	let randCharStrm = `{asciiCharStr.slice(index, 64)}{asciiCharStr.slice(0, index)}`
+	var base64Arr = base64.split()
+	for (let i, base64Arr.len) {
+	  var j = asciiCharStr.index_of(base64Arr[i])
+	  base64Arr[i] = randCharStrm.split()[j]
+	}
+	base64Arr.join()
+}
+  
+@decodeShift(shifted, date, id) {
+	let seed = `{Date:hour(date)} {Date:minute(date)} {id}`
+	var shiftedArr = shifted.split()
+	let index = Math:floor(Math:gen_rng(seed)()*64)
+	let randCharStrm = `{asciiCharStr.slice(index, 64)}{asciiCharStr.slice(0, index)}`
+	var result = []
+	for (let i, shifted.len) {
+	  var j = randCharStrm.index_of(shiftedArr[i])
+	  if (j == -1) {
+		shiftedArr[i] = '_'
+	  } else {
+		shiftedArr[i] = asciiChars[j]
+	  }
+	}
+	
+	shiftedArr.join()
+}
+
+@NewNote(username, host, cw, txt) {
+	
+	if host == null {
+		let text = `{encodeShift(txt, Date:now(), user_id)}{Str:lf}#{name}_PeachtaRoom`
+		let notes = Mk:api("notes/search-by-tag" { tag: [username "_PeachtaRoom"].join(), limit: 10, })
+		let isLast = 0
+		var noteId = ''
+		each (let note, notes) {
+			let userName = note.user.username
+			let userHost = note.user.host
+			if userName == username && userHost == host {
+				var noteText = note.text
+				isLast = isLast + 1
+				if isLast == 1 {
+					noteId = note.id
+				}
+			}
+		}
+		if noteId != '' {
+			Mk:api('notes/delete' {
+				noteId: noteId
+			}, accessToken)
+		}
+		Mk:api('notes/create' {
+			cw: cw,
+			visibility: 'home',
+			text: text
+		}, accessToken)
+	} else {
+		Mk:open_url(`https://yeojibur.in/peachtartstatics/?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom)`)
+	}
+}
+
+var randomEvent = false
+var eventX = -1
+var eventY = -1
+var points = 0
+
+@randInterval() {
+	let now = Date:now()
+	Math:gen_rng(now)()*1000*2*60+1000*10*60
+}
+
+@eventCoord(itemsArray) {
+	let now = Date:now()
+	let index = Math:floor(Math:gen_rng(now)()*itemsArray.len)
+	if (itemsArray[index][1] == 't') {
+		eventX = itemsArray[index][3].to_num()
+		eventY = itemsArray[index][4].to_num()
+	} else {
+		eventCoord(itemsArray)
+	}
+}
+
+let roomEls = [Ui:C:container({
+	align: 'center'
+	children: [
+		Ui:C:text({
+			size: 1.5
+			bold: true
+			text: "PEACHT.AROOM"
+		})
+	]
+})]
+
+roomEls.push(Ui:C:container({
+	align: 'center'
+	children: [
+		Ui:C:mfm({
+			text: `nya`
+		})
+	]
+} 'roommain'))
+
+roomEls.push(Ui:C:container({
+	align: 'center'
+	children: [
+		Ui:C:mfm({
+			text: `🪙포인트: {points}`
+		})
+	]
+} 'roominfo'))
+
+roomEls.push(Ui:C:container({
+	align: 'center'
+	children: [
+		Ui:C:mfm({
+			text: `nya`
+		})
+	]
+} 'controller'))
+
+if (roomName != null) {
+
+	//아바타
+	var avatarY = 7
+	Mk:save('avatarY' avatarY)
+	var avatarX = 7
+	Mk:save('avatarX' avatarX)
+
+	@loadRoom(roomId, roomHost, name, host) {
+
+		let notes = Mk:api("notes/search-by-tag" { tag: [name "_PeachtaRoom"].join(), limit: 10, })
+		let isLast = 0
+		var themeArray = []
+		var itemsArray = []
+		var myThemeArray = []
+		var myItemsArray = []
+		var items = ''
+		
+		if (notes.len == 0) {
+			myThemeArray = ['ocean' 'peach' 'peach']
+			myItemsArray = [['bed' 'f' 'f' 0 0 0 'n'] ['table' 'f' 'f' 0 0 0 'n'] ['chair' 'f' 'f' 0 0 0 'f']]
+			points = 1000
+		}
+
+		each (let note, notes) {
+			let userName = note.user.username
+			let userHost = null
+			if note.user.host != null {
+				userHost = note.user.host
+			}
+			if userName == name && userHost == host {
+				let userId = note.user.id
+				var noteCreatedAt = note.createdAt
+				var noteText = decodeShift(note.text.split(`{Str:lf}#`)[0], Date:parse(noteCreatedAt), userId)
+				if (!noteText.incl('_')) {
+					noteText = Mk:decode(noteText)
+					if noteText.incl('room-theme') {
+						isLast = isLast + 1
+						if isLast == 1 {
+							myThemeArray = noteText.split(`room-theme{Str:lf}`)[1].split(`{Str:lf}room-items`)[0].split(Str:lf)
+							myItemsArray = noteText.split(`room-items{Str:lf}`)[1].split(`{Str:lf}event-items`)[0].split(Str:lf)
+							points = noteText.split(`points{Str:lf}`)[1].split(`{Str:lf}`)[0].to_num()
+							for (let i, myItemsArray.len) {
+								myItemsArray[i] = myItemsArray[i].split(', ')
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (roomId == name) {
+			themeArray = myThemeArray
+			itemsArray = myItemsArray
+		} else {
+			let notes = Mk:api("notes/search-by-tag" { tag: [roomId "_PeachtaRoom"].join(), limit: 10, })
+			let isLast = 0
+			each (let note, notes) {
+				let userName = note.user.username
+				let userHost = null
+				if note.user.host != null {
+					userHost = note.user.host
+				}
+				if userName == roomId && userHost == roomHost {
+					let userId = note.user.id
+					var noteCreatedAt = note.createdAt
+					var noteText = decodeShift(note.text.split(`{Str:lf}#`)[0], Date:parse(noteCreatedAt), userId)
+					if (!noteText.incl('_')) {
+						noteText = Mk:decode(noteText)
+						if noteText.incl('room-theme') {
+							isLast = isLast + 1
+							if isLast == 1 {
+								themeArray = noteText.split(`room-theme{Str:lf}`)[1].split(`{Str:lf}room-items`)[0].split(Str:lf)
+								itemsArray = noteText.split(`room-items{Str:lf}`)[1].split(`{Str:lf}event-items`)[0].split(Str:lf)
+								for (let i, itemsArray.len) {
+									itemsArray[i] = itemsArray[i].split(', ')
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		Mk:save('itemsSaved' myItemsArray)
+		var itemsSaved = Mk:load('itemsSaved')
+
+		@generateRandomEvent() {
+			if (isAuthed) {
+				randomEvent = true
+				eventCoord(itemsArray)
+				reLoadRoom(itemsArray)
+			}
+		}
+
+		@endRandomEvent() {
+			randomEvent = false
+			eventX = -1
+			eventY = -1
+			var now = Date:now()
+			var pointAcq = Math:floor(Math:gen_rng(now)()*30)
+			points = points + pointAcq
+			NewNote(name, host, `피치타룸에서 {pointAcq} 포인트를 획득했습니다!`, saveNoteText())
+			Async:timeout(randInterval(), generateRandomEvent)
+		}
+
+		@saveNoteText() {
+			var themeStr = themeArray.join(Str:lf)
+			var itemsStr_m = []
+			for (let i, itemsSaved.len) {
+				itemsStr_m.push(itemsSaved[i].join(', '))
+			}
+			itemsStr_m = itemsStr_m.join(Str:lf)
+			var noteStr = `room-theme{Str:lf}{themeStr}{Str:lf}room-items{Str:lf}{itemsStr_m}{Str:lf}event-items{Str:lf}points{Str:lf}{points}`
+
+			noteStr
+		}
+
+		var charController_1 = [
+			{
+				text: '◤',
+				onClick: @() {
+					if (avatarX > 0) {
+						avatarX -= 1
+						Mk:save('avatarX' avatarX)
+						if (avatarX == eventX && avatarY == eventY) {
+							endRandomEvent()
+						}
+						reLoadRoom(itemsArray)
+					}
+				}
+			} {
+				text: '◥',
+				onClick: @() {
+					if (avatarY > 0) {
+						avatarY -= 1
+						Mk:save('avatarY' avatarY)
+						if (avatarX == eventX && avatarY == eventY) {
+							endRandomEvent()
+						}
+						reLoadRoom(itemsArray)
+					}
+				}
+			}
+		]
+		
+		var charController_2 = [
+			{
+				text: '◣',
+				onClick: @() {
+					if (avatarY < 7) {
+						avatarY = avatarY + 1
+						Mk:save('avatarY' avatarY)
+						if (avatarX == eventX && avatarY == eventY) {
+							endRandomEvent()
+						}
+						reLoadRoom(itemsArray)
+					}
+				}
+			} {
+				text: '◢',
+				onClick: @() {
+					if (avatarX < 7) {
+						avatarX = avatarX + 1
+						Mk:save('avatarX' avatarX)
+						if (avatarX == eventX && avatarY == eventY) {
+							endRandomEvent()
+						}
+						reLoadRoom(itemsArray)
+					}
+				}
+			}
+		]
+		
+		@loadItem(selected) {
+			var itemsButton = []
+			reLoadRoom(itemsSaved, -1, -1)
+			for (let i, itemsSaved.len) {
+				itemsButton.push({
+					text: itemsSaved[i][0]
+					onClick: @() {
+						var editChildren = [
+							Ui:C:buttons({
+								buttons: [
+									{
+										text: '돌아가기'
+										onClick: @(){
+											avatarX = Mk:load('avatarX')
+											avatarY = Mk:load('avatarY')
+											itemsSaved = Mk:load('itemsSaved')
+											Ui:get('controller').update({
+												children: [
+													Ui:C:button({
+														text: '편집 모드'
+														primary: true
+														onClick: edit_mode
+													})
+													Ui:C:buttons({
+														buttons: charController_1
+													})
+													Ui:C:buttons({
+														buttons: charController_2
+													})
+												]
+											})
+											reLoadRoom(itemsSaved)
+										}
+									} {
+										text: '저장하기'
+										primary: true
+										onClick: @(){
+											avatarX = Mk:load('avatarX')
+											avatarY = Mk:load('avatarY')
+											Mk:save('itemsSaved' itemsSaved)
+											Ui:get('controller').update({
+												children: [
+													Ui:C:button({
+														text: '편집 모드'
+														primary: true
+														onClick: edit_mode
+													})
+													Ui:C:buttons({
+														buttons: charController_1
+													})
+													Ui:C:buttons({
+														buttons: charController_2
+													})
+												]
+											})
+											reLoadRoom(itemsSaved)
+										}
+									}
+								]
+							})
+						]
+						
+						itemsSaved[i][1] = 't'
+						reLoadRoom(itemsSaved, -1, -1)
+						editChildren = editChildren.slice(0, 1)
+						editChildren.push(
+							Ui:C:buttons({
+								buttons: loadItem(i)
+							})
+						)
+						editChildren.push(
+							Ui:C:container({
+								borderWidth: 4
+								align: 'center'
+								padding: 18
+								rounded: true
+								bgColor: 'var(--bg)'
+								children: [
+									Ui:C:button({
+										text: '집어넣기'
+										onClick: @(){
+											itemsSaved[i][1] = 'f'
+											itemsSaved[i][2] = 'f'
+											itemsSaved[i][3] = '0'
+											itemsSaved[i][4] = '0'
+											itemsSaved[i][5] = '0'
+											reLoadRoom(itemsSaved, -1, -1)
+											editChildren = editChildren.slice(0, 1)
+											editChildren.push(
+												Ui:C:buttons({
+													buttons: loadItem(-1)
+												})
+											)
+											Ui:get('controller').update({
+												children: editChildren
+											})
+										}
+									})
+									Ui:C:buttons({
+										buttons: [
+											{
+												text: '◤'
+												onClick: @(){
+													if (itemsSaved[i][3].to_num() > 0) {
+														itemsSaved[i][3] = itemsSaved[i][3].to_num() - 1
+														itemsSaved[i][3] = itemsSaved[i][3].to_str()
+													}
+													reLoadRoom(itemsSaved)
+												}
+											} {
+												text: '◥'
+												onClick: @(){
+													if (itemsSaved[i][4].to_num() > 0) {
+														itemsSaved[i][4] = itemsSaved[i][4].to_num() - 1
+														itemsSaved[i][4] = itemsSaved[i][4].to_str()
+													}
+													reLoadRoom(itemsSaved)
+												}
+											}
+										]
+									})
+									Ui:C:buttons({
+										buttons: [
+											{
+												text: '◣'
+												onClick: @(){
+													if (itemsSaved[i][4].to_num() < 7) {
+														itemsSaved[i][4] = itemsSaved[i][4].to_num() + 1
+														itemsSaved[i][4] = itemsSaved[i][4].to_str()
+													}
+													reLoadRoom(itemsSaved)
+												}
+											} {
+												text: '◢'
+												onClick: @(){
+													if (itemsSaved[i][3].to_num() < 7) {
+														itemsSaved[i][3] = itemsSaved[i][3].to_num() + 1
+														itemsSaved[i][3] = itemsSaved[i][3].to_str()
+													}
+													reLoadRoom(itemsSaved)
+												}
+											}
+										]
+									})
+									Ui:C:switch({
+										label: 'Flip'
+										caption : '아이템의 왼쪽 - 오른쪽을 변경 합니다.'
+										default: if itemsSaved[i][2] == 'f' false else true
+										onChange: @(v){
+											if (v) {
+												itemsSaved[i][2] = 't'
+											} else {
+												itemsSaved[i][2] = 'f'
+											}
+											reLoadRoom(itemsSaved)
+										}
+									})
+									Ui:C:switch({
+										label: 'Turn'
+										caption : '아이템의 앞 - 뒤를 변경 합니다.'
+										default: if itemsSaved[i][6] == 'f' || itemsSaved[i][6] == 'n' false else true
+										onChange: @(v){
+											if (itemsSaved[i][6] != 'n') {
+												if (v) {
+													itemsSaved[i][6] = 't'
+												} else {
+													itemsSaved[i][6] = 'f'
+												}
+											}
+											reLoadRoom(itemsSaved)
+										}
+									})
+								]
+							})
+						)
+						Ui:get('controller').update({
+							children: editChildren
+						})
+					}
+					primary: if itemsSaved[i][1] == 't' false else true
+					rounded: if selected == i true else false
+				})
+			}
+			itemsButton
+		}
+		
+		@reLoadRoom(itemsSaved) {
+
+			var itemsStr = []
+
+			var avatarStr = ''
+			if (avatarX >= 0 && avatarY >= 0) {
+				avatarStr = `$[position.y={avatarX+avatarY-200},x={avatarX-avatarY} :{defaultAvatar}:]`
+			}
+
+			// 1층
+			var floor1 = []
+			if (avatarStr != '') {
+				floor1.push(avatarStr)
+			}
+
+			for (let i, itemsSaved.len) {
+				if itemsSaved[i][1] == 't'  { //isPlaced
+					if itemsSaved[i][5].to_num() == 0 {
+						if itemsSaved[i][2] == 't'  { //isFlipped
+							if itemsSaved[i][6] == 'n' {
+								floor1.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-200},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} $[flip :isoroom_{itemsSaved[i][0]}:]]`)
+							} else if itemsSaved[i][6] == 'f' {
+								floor1.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-200},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} $[flip :isoroom_{itemsSaved[i][0]}_f:]]`)
+							} else {
+								floor1.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-200},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} $[flip :isoroom_{itemsSaved[i][0]}_b:]]`)
+							}
+						} else {
+							if itemsSaved[i][6] == 'n' {
+								floor1.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-200},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} :isoroom_{itemsSaved[i][0]}:]`)
+							} else if itemsSaved[i][6] == 'f' {
+								floor1.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-200},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} :isoroom_{itemsSaved[i][0]}_f:]`)
+							} else {
+								floor1.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-200},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} :isoroom_{itemsSaved[i][0]}_b:]`)
+							}
+						}
+					}
+				}
+			}
+
+			let comp = @(a, b) { a.split('y=')[1].split(',x=')[0].to_num() - b.split('y=')[1].split(',x=')[0].to_num() }
+			floor1.sort(comp)
+
+			var order = 0
+			for (let i, floor1.len) {
+				if (floor1[i].incl('flip')) {
+					floor1[i] = `$[position.y={floor1[i].split('y=')[1].split(',x=')[0].to_num()/2},x={floor1[i].split('x=')[1].split(' $')[0].to_num()+floor1.len-1+order} ${floor1[i].split(' $')[1]}`
+				} else {
+					floor1[i] = `$[position.y={floor1[i].split('y=')[1].split(',x=')[0].to_num()/2},x={floor1[i].split('x=')[1].split(' :')[0].to_num()+floor1.len-1+order} :{floor1[i].split(' :')[1]}`
+				}
+				order -= 2
+			}
+
+			itemsStr.push(floor1.join())
+			itemsStr.push(Str:lf)
+
+			// 2층
+
+			var eventStr = ''
+			if (randomEvent) {
+				eventStr = `$[position.y={eventX+eventY-206},x={eventX-eventY} $[jelly 🪙]]`
+			} 
+
+			var floor2 = []
+			if (eventStr != '') {
+				floor2.push(eventStr)
+			}
+			for (let i, itemsSaved.len) {
+				if itemsSaved[i][1] == 't'  { //isPlaced
+					if itemsSaved[i][5].to_num() == 1 {
+						if itemsSaved[i][2] == 't'  { //isFlipped
+							floor2.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-206},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} $[flip :isoroom_{itemsSaved[i][0]}:]]`)
+						} else {
+							floor2.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-206},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} :isoroom_{itemsSaved[i][0]}:]`)
+						}
+					}
+				}
+			}
+
+			floor2.sort(comp)
+			order = 0
+			for (let i, floor2.len) {
+				if (floor2[i].incl(' $[')) {
+					floor2[i] = `$[position.y={floor2[i].split('y=')[1].split(',x=')[0].to_num()/2},x={floor2[i].split('x=')[1].split(' $')[0].to_num()+floor2.len-1+order} ${floor2[i].split(' $')[1]}`
+				} else {
+					floor2[i] = `$[position.y={floor2[i].split('y=')[1].split(',x=')[0].to_num()/2},x={floor2[i].split('x=')[1].split(' :')[0].to_num()+floor2.len-1+order} :{floor2[i].split(' :')[1]}`
+				}
+				order -= 2
+			}
+			
+			itemsStr.push(floor2.join())
+			itemsStr.push(Str:lf)
+
+			// 3층
+			var floor3 = []
+			for (let i, itemsSaved.len) {
+				if itemsSaved[i][1] == 't'  { //isPlaced
+					if itemsSaved[i][5].to_num() == 2 {
+						if itemsSaved[i][2] == 't'  { //isFlipped
+							floor3.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-212},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} $[flip :isoroom_{itemsSaved[i][0]}:]]`)
+						} else {
+							floor3.push(`$[position.y={itemsSaved[i][3].to_num()+itemsSaved[i][4].to_num()-212},x={itemsSaved[i][3].to_num()-itemsSaved[i][4].to_num()} :isoroom_{itemsSaved[i][0]}:]`)
+						}
+					}
+				}
+			}
+
+			floor3.sort(comp)
+			order = 0
+			for (let i, floor3.len) {
+				if (floor3[i].incl('flip')) {
+					floor3[i] = `$[position.y={floor3[i].split('y=')[1].split(',x=')[0].to_num()/2},x={floor3[i].split('x=')[1].split(' $')[0].to_num()+floor3.len-1+order} ${floor3[i].split(' $')[1]}`
+				} else {
+					floor3[i] = `$[position.y={floor3[i].split('y=')[1].split(',x=')[0].to_num()/2},x={floor3[i].split('x=')[1].split(' :')[0].to_num()+floor3.len-1+order} :{floor3[i].split(' :')[1]}`
+				}
+				order -= 2
+			}
+			
+			itemsStr.push(floor3.join())
+			items = itemsStr.join()
+
+			Ui:get('roommain').update({
+				align: 'center'
+				children: [
+					Ui:C:mfm({
+						text: if host == null `@{roomName}@i.peacht.art님의 피치타룸` else `@{roomName}@{roomHost}님의 피치타룸`
+					})
+					Ui:C:mfm({
+						text: `<center>{frame}{Str:lf}{items}{Str:lf}{avatarStr}</center>`
+					})
+				]
+			})
+			Ui:get('roominfo').update({
+				align: 'center'
+				children: [
+					Ui:C:mfm({
+						text: `🪙포인트: {points}`
+					})
+				]
+			})
+		}
+
+
+		// 편집모드
+
+		let itemShop = [
+			`bed`
+			`table`
+			`chair_f`
+		]
+
+		@controllerUpdate() {
+			if (roomName == name && isAuthed) {
+				Ui:get('controller').update({
+					align: 'center'
+					children: [
+						Ui:C:button({
+							text: '편집 모드'
+							primary: true
+							onClick: edit_mode
+						})
+						Ui:C:buttons({
+							buttons: charController_1
+						})
+						Ui:C:buttons({
+							buttons: charController_2
+						})
+					]
+				})
+			} else {
+				Ui:get('controller').update({
+					align: 'center'
+					children: [
+						Ui:C:buttons({
+							buttons: charController_1
+						})
+						Ui:C:buttons({
+							buttons: charController_2
+						})
+					]
+				})
+			}
+	
+		}
+
+		@edit_mode() {
+			avatarX = -1
+			avatarY = -1
+			Ui:get('controller').update({
+				children: [
+					Ui:C:button({
+						text: '돌아가기'
+						primary: true
+						onClick: @(){
+							avatarX = Mk:load('avatarX')
+							avatarY = Mk:load('avatarY')
+							Ui:get('controller').update({
+								children: [
+									Ui:C:button({
+										text: '편집 모드'
+										primary: true
+										onClick: edit_mode
+									})
+									Ui:C:buttons({
+										buttons: charController_1
+									})
+									Ui:C:buttons({
+										buttons: charController_2
+									})
+								]
+							})
+							reLoadRoom(itemsSaved, avatarX, avatarY)
+						}
+					})
+					Ui:C:buttons({
+						buttons: loadItem(-1)
+					})
+				]
+			})
+		}
+		
+
+		reLoadRoom(itemsArray, Mk:load('avatarX'), Mk:load('avatarY'))
+		controllerUpdate()
+		Async:timeout(randInterval(), generateRandomEvent)
+
+		
+	}
+
+	loadRoom(roomName, roomHost, name, host)
+
+} else if (name == null && roomName == null) {
+	Ui:get('roommain').update({
+		children: [
+			Ui:C:text({
+				text: "계정 인증"
+			})
+			Ui:C:textInput({
+				label: "소속된 인스턴스 주소"
+				onInput: @(v) { 
+					host = if v == instanceName null else v 
+					hostText = v
+				}
+			})
+		]
+	})
+	Ui:get('controller').update({
+		align: 'center'
+		children: [
+			Ui:C:button({
+				text: "계정 인증"
+					onClick: @() {
+						Mk:dialog('아래 링크로' `?[이동](https://yeojibur.in/peachtartstatics/?host={hostText})`)
+					}
+				primary: true
+			})
+			Ui:C:folder({
+				title: '설명'
+				children: [
+					Ui:C:mfm({
+						text: `:arrow_right: 유저의 미스키 인스턴스에 앱을 하나 만듭니다.`
+					})
+					Ui:C:mfm({
+						text: `:arrow_right: 노트를 지우고 쓸 수 있는 권한이 포함됩니다.`
+					})
+				]
+			})
+			
+		]
+	})
+}
+
+Ui:render(roomEls)
+

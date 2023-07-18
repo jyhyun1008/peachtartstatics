@@ -174,92 +174,94 @@ if (host) {
                                 localStorage.setItem('authId', myAppRes.id)
                                 location.href = 'https://yeojibur.in/peachtartstatics'
                             })
-                        }
-
-                        if (localStorage.getItem('tag')) { // 노트 읽고 지우기
-                            const tag = localStorage.getItem('tag')
-                            const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
-                            const noteReadParam = {
-                                headers: {
-                                    'content-type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    tag: tag
-                                }),
-                                method: 'POST'
-                            }
-    
-                            fetch(noteReadUrl, noteReadParam)
-                            .then((noteData) => {return noteData.json()})
-                            .then((noteRes) => {
-                                console.log(noteRes)
-                                var deleteNoteId
-                                for (var j = 0; j < noteRes.length; j++){
-                                    if (noteRes.user.username == myUserName) {
-                                        deleteNoteId = noteRes.id
-                                        break
-                                    }
-                                }
-                                if (deleteNoteId) {
-                                    const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
-                                    const noteDeleteParam = {
-                                        headers: {
-                                            'content-type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                            i: i,
-                                            noteId: deleteNoteId
-                                        }),
-                                        credentials: 'omit',
-                                        method: 'POST'
-                                    }
-        
-                                    fetch(noteDeleteUrl, noteDeleteParam)
-                                    .then((deleteData) => {return deleteData.json()})
-                                    .then((deleteRes) => {})
-                                    .catch((error) => console.log(error));
-                                }
-                            })
-                            .catch((error) => console.log(error));
-                        }
-    
-                        if (localStorage.getItem('msg')) { // 노트 쓰기
-                            var msg = localStorage.getItem('msg')
-                            const noteCreateUrl = 'https://'+host+'/api/notes/create'
-                            if (localStorage.getItem('tag')) {
-                                msg = msg + "\n#" + localStorage.getItem('tag')
-                            }
-                            var cw = null
-                            if (localStorage.getItem('cw')) {
-                                cw = localStorage.getItem('cw')
-                            }
-                            const noteCreateParam = {
-                                headers: {
-                                    'content-type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    i: i,
-                                    cw: cw,
-                                    visibility: 'home',
-                                    text: msg
-                                }),
-                                credentials: 'omit',
-                                method: 'POST'
-                            }
-    
-                            fetch(noteCreateUrl, noteCreateParam)
-                            .then((noteData) => {return noteData.json()})
-                            .then((noteRes) => {
-                                console.log(noteRes)
-                                localStorage.removeItem('tag');
-                                localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
-
-                                location.href = 'https://'+host
-                            })
-                            .catch((error) => console.log(error));
                         } else {
-                            location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authid='+localStorage.getItem('authId')
+
+                            if (localStorage.getItem('tag')) { // 노트 읽고 지우기
+                                const tag = localStorage.getItem('tag')
+                                const noteReadUrl = 'https://'+host+'/api/notes/search-by-tag'
+                                const noteReadParam = {
+                                    headers: {
+                                        'content-type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        tag: tag
+                                    }),
+                                    method: 'POST'
+                                }
+        
+                                fetch(noteReadUrl, noteReadParam)
+                                .then((noteData) => {return noteData.json()})
+                                .then((noteRes) => {
+                                    console.log(noteRes)
+                                    var deleteNoteId
+                                    for (var j = 0; j < noteRes.length; j++){
+                                        if (noteRes.user.username == myUserName) {
+                                            deleteNoteId = noteRes.id
+                                            break
+                                        }
+                                    }
+                                    if (deleteNoteId) {
+                                        const noteDeleteUrl = 'https://'+host+'/api/notes/delete'
+                                        const noteDeleteParam = {
+                                            headers: {
+                                                'content-type': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                i: i,
+                                                noteId: deleteNoteId
+                                            }),
+                                            credentials: 'omit',
+                                            method: 'POST'
+                                        }
+            
+                                        fetch(noteDeleteUrl, noteDeleteParam)
+                                        .then((deleteData) => {return deleteData.json()})
+                                        .then((deleteRes) => {})
+                                        .catch((error) => console.log(error));
+                                    }
+                                })
+                                .catch((error) => console.log(error));
+                            }
+        
+                            if (localStorage.getItem('msg')) { // 노트 쓰기
+                                var msg = localStorage.getItem('msg')
+                                const noteCreateUrl = 'https://'+host+'/api/notes/create'
+                                if (localStorage.getItem('tag')) {
+                                    msg = msg + "\n#" + localStorage.getItem('tag')
+                                }
+                                var cw = null
+                                if (localStorage.getItem('cw')) {
+                                    cw = localStorage.getItem('cw')
+                                }
+                                const noteCreateParam = {
+                                    headers: {
+                                        'content-type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        i: i,
+                                        cw: cw,
+                                        visibility: 'home',
+                                        text: msg
+                                    }),
+                                    credentials: 'omit',
+                                    method: 'POST'
+                                }
+        
+                                fetch(noteCreateUrl, noteCreateParam)
+                                .then((noteData) => {return noteData.json()})
+                                .then((noteRes) => {
+                                    console.log(noteRes)
+                                    localStorage.removeItem('tag');
+                                    localStorage.removeItem('msg'); //쓰고나면 localStorage에서 태그랑 메세지 값 지워야함
+    
+                                    location.href = 'https://'+host
+                                })
+                                .catch((error) => console.log(error));
+                            } else {
+                                location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authid='+localStorage.getItem('authId')
+                            }
                         }
+
                     }
                 })
                 .catch((error) => console.log(error));

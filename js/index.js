@@ -229,8 +229,7 @@ if (host) {
                                         }
             
                                         fetch(noteDeleteUrl, noteDeleteParam)
-                                        .then((deleteData) => {return deleteData.json()})
-                                        .then((deleteRes) => {
+                                        .then((deleteData) => {
                                             writemsg(i)
                                         })
                                         .catch((error) => console.log(error));

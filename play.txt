@@ -205,6 +205,15 @@ roomEls.push(Ui:C:container({
 	]
 } 'controller'))
 
+roomEls.push(Ui:C:container({
+	align: 'center'
+	children: [
+		Ui:C:mfm({
+			text: ``
+		})
+	]
+} 'footer'))
+
 if (roomName != null) {
 
 	//아바타
@@ -395,21 +404,7 @@ if (roomName != null) {
 											avatarX = Mk:load('avatarX')
 											avatarY = Mk:load('avatarY')
 											itemsSaved = Mk:load('itemsSaved')
-											Ui:get('controller').update({
-												children: [
-													Ui:C:button({
-														text: '편집 모드'
-														primary: true
-														onClick: edit_mode
-													})
-													Ui:C:buttons({
-														buttons: charController_1
-													})
-													Ui:C:buttons({
-														buttons: charController_2
-													})
-												]
-											})
+											controllerUpdate()
 											reLoadRoom(itemsSaved)
 										}
 									} {
@@ -419,21 +414,7 @@ if (roomName != null) {
 											avatarX = Mk:load('avatarX')
 											avatarY = Mk:load('avatarY')
 											Mk:save('itemsSaved' itemsSaved)
-											Ui:get('controller').update({
-												children: [
-													Ui:C:button({
-														text: '편집 모드'
-														primary: true
-														onClick: edit_mode
-													})
-													Ui:C:buttons({
-														buttons: charController_1
-													})
-													Ui:C:buttons({
-														buttons: charController_2
-													})
-												]
-											})
+											controllerUpdate()
 											reLoadRoom(itemsSaved)
                                             NewNote(name, host, `피치타룸의 인테리어를 변경했습니다!`, saveNoteText())
 										}
@@ -707,13 +688,287 @@ if (roomName != null) {
 			})
 		}
 
-
 		// 편집모드
 
-		let itemShop = [
-			`bed`
-			`table`
-			`chair_f`
+		@edit_mode() {
+			avatarX = -1
+			avatarY = -1
+			Ui:get('controller').update({
+				children: [
+					Ui:C:button({
+						text: '돌아가기'
+						primary: true
+						onClick: @(){
+							avatarX = Mk:load('avatarX')
+							avatarY = Mk:load('avatarY')
+							controllerUpdate()
+							reLoadRoom(itemsSaved, avatarX, avatarY)
+						}
+					})
+					Ui:C:buttons({
+						buttons: loadItem(-1)
+					})
+				]
+			})
+		}
+
+		@shop_mode() {
+
+			avatarX = -1
+			avatarY = -1
+
+			var spaceShop = []
+			var furnitureShop = []
+			var eventShop = []
+
+			let notes = Mk:api("notes/search-by-tag" { tag: "peachtaroom-itemshop", limit: 10, })
+
+				each (let note, notes) {
+					let userName = note.user.username
+					if userName == 'PeachtaRoom' {
+						var noteText = note.text
+						if noteText.incl('peachtaroom-itemshop') {
+							// 공간
+							var spaceShopArray = note.text.split(`space{Str:lf}`)[1].split(`{Str:lf}furniture`)[0].split(Str:lf)
+							for (let i, spaceShopArray.len) {
+								spaceShop.push(spaceShopArray[i].split(', '))
+							}
+
+							//가구
+							var furnitureShopArray = note.text.split(`furniture{Str:lf}`)[1].split(`{Str:lf}event`)[0].split(Str:lf)
+							for (let i, furnitureShopArray.len) {
+								furnitureShop.push(furnitureShopArray[i].split(', '))
+							}
+
+							//기능
+							var eventShopArray = note.text.split(`event{Str:lf}`)[1].split(`{Str:lf}#`)[0].split(Str:lf)
+							for (let i, eventShopArray.len) {
+								eventShop.push(eventShopArray[i].split(', '))
+							}
+						}
+					}
+				}
+			
+			var spaceShopButton = []
+
+			for (let i, spaceShop.len) {
+				spaceShopButton.push({
+					text: spaceShop[i][1]
+					onClick: @() {
+						Ui:get('footer').update({
+							children: [
+								Ui:C:folder({
+									title: spaceShop[i][1]
+									children: [
+										Ui:C:mfm({
+											text: `:isoroom_{spaceShop[i][0]}:`
+										})
+										Ui:C:mfm({
+											text: `🪙 {spaceShop[i][2]}`
+										})
+										Ui:C:button({
+											text: '구입'
+											primary: true
+											onClick: @() {
+												Mk:dialog('구입' '구입 관련 함수가 들어갈 예정입니다')
+											}
+										})
+									]
+								})
+							]
+						})
+					}
+				})
+			}
+
+			var furnitureShopButton = []
+
+			for (let i, furnitureShop.len) {
+				furnitureShopButton.push({
+					text: furnitureShop[i][1]
+					onClick: @() {
+						Ui:get('footer').update({
+							children: [
+								Ui:C:folder({
+									title: furnitureShop[i][1]
+									children: [
+										Ui:C:mfm({
+											text: `:isoroom_{furnitureShop[i][0]}:`
+										})
+										Ui:C:mfm({
+											text: `🪙 {furnitureShop[i][2]}`
+										})
+										Ui:C:button({
+											text: '구입'
+											primary: true
+											onClick: @() {
+												var willPurchase = Mk:confirm('구입' '아이템을 구입하시겠습니까?')
+												if (willPurchase) {
+													points = points - furnitureShop[i][2].to_num()
+													if furnitureShop[i][0].incl('_') {
+														var furName = furnitureShop[i][0].split('_')[0]
+														itemsSaved.push([furName, 'f', 'f', '0', '0', '0', 'f'])
+													} else {
+														itemsSaved.push([furnitureShop[i][0], 'f', 'f', '0', '0', '0', 'n'])
+													}
+													Mk:save('itemsSaved' itemsSaved)
+													reLoadRoom(itemsSaved)
+													NewNote(name, host, `피치타룸에서 아이템을 구입했습니다!`, saveNoteText())
+												}
+											}
+										})
+									]
+								})
+							]
+						})
+					}
+				})
+			}
+
+			var eventShopButton = []
+
+			for (let i, eventShop.len) {
+				eventShopButton.push({
+					text: eventShop[i][1]
+					onClick: @() {
+						Ui:get('footer').update({
+							children: [
+								Ui:C:folder({
+									title: eventShop[i][1]
+									children: [
+										Ui:C:mfm({
+											text: `:isoroom_{eventShop[i][0]}:`
+										})
+										Ui:C:mfm({
+											text: `🪙 {eventShop[i][2]}`
+										})
+										Ui:C:button({
+											text: '구입'
+											primary: true
+											onClick: @() {
+												Mk:dialog('구입' '구입 관련 함수가 들어갈 예정입니다')
+											}
+										})
+									]
+								})
+							]
+						})
+					}
+				})
+			}
+
+			@shopButtonFn(ctgr) {
+				[
+					Ui:C:button({
+						text: '메인으로'
+						primary: true
+						onClick: @() {
+							Ui:get('controller').update({
+								children: [
+									Ui:C:button({
+										text: '돌아가기'
+										primary: true
+										onClick: @() {
+											avatarX = Mk:load('avatarX')
+											avatarY = Mk:load('avatarY')
+											controllerUpdate()
+										}
+									})
+									Ui:C:buttons({
+										buttons: categories
+									})
+								]
+							})
+							Ui:get('footer').update({
+								children: [
+									Ui:C:text({
+										text: ''
+									})
+								]
+							})
+						}
+					})
+					Ui:C:buttons({
+						buttons: ctgr
+					})
+				]
+			}
+
+			let categories = [
+				{
+					text: "공간"
+					onClick: @() {
+						Ui:get('controller').update({
+							children: shopButtonFn(spaceShopButton)
+						})
+					}
+				} {
+					text: "가구"
+					onClick: @() {
+						Ui:get('controller').update({
+							children: shopButtonFn(furnitureShopButton)
+						})
+					}
+				} {
+					text: "기능"
+					onClick: @() {
+						Ui:get('controller').update({
+							children: shopButtonFn(eventShopButton)
+						})
+					}
+				} 
+			]
+
+			Ui:get('controller').update({
+				align: 'center'
+				children: [
+							Ui:C:button({
+								text: '돌아가기'
+								primary: true
+								onClick: @() {
+									avatarX = Mk:load('avatarX')
+									avatarY = Mk:load('avatarY')
+									Ui:get('controller').update({
+										align: 'center'
+										children: [
+											Ui:C:buttons({
+												buttons: modebutton
+											})
+											Ui:C:buttons({
+												buttons: charController_1
+											})
+											Ui:C:buttons({
+												buttons: charController_2
+											})
+										]
+									})
+								}
+							})
+							Ui:C:buttons({
+								buttons: categories
+							})
+				]
+			})
+			Ui:get('footer').update({
+						align: 'center'
+						children: [
+							Ui:C:text({
+								text: ""
+							})
+						]
+			})
+		}
+
+		let modebutton = [
+			{
+				text: '편집 모드'
+				primary: true
+				onClick: edit_mode
+			} {
+				text: '상점 모드'
+				primary: true
+				onClick: shop_mode
+			}
 		]
 
 		@controllerUpdate() {
@@ -721,10 +976,8 @@ if (roomName != null) {
 				Ui:get('controller').update({
 					align: 'center'
 					children: [
-						Ui:C:button({
-							text: '편집 모드'
-							primary: true
-							onClick: edit_mode
+						Ui:C:buttons({
+							buttons: modebutton
 						})
 						Ui:C:buttons({
 							buttons: charController_1
@@ -747,51 +1000,20 @@ if (roomName != null) {
 					]
 				})
 			}
-	
-		}
-
-		@edit_mode() {
-			avatarX = -1
-			avatarY = -1
-			Ui:get('controller').update({
+			Ui:get('footer').update({
+				align: 'center'
 				children: [
-					Ui:C:button({
-						text: '돌아가기'
-						primary: true
-						onClick: @(){
-							avatarX = Mk:load('avatarX')
-							avatarY = Mk:load('avatarY')
-							Ui:get('controller').update({
-								children: [
-									Ui:C:button({
-										text: '편집 모드'
-										primary: true
-										onClick: edit_mode
-									})
-									Ui:C:buttons({
-										buttons: charController_1
-									})
-									Ui:C:buttons({
-										buttons: charController_2
-									})
-								]
-							})
-							reLoadRoom(itemsSaved, avatarX, avatarY)
-						}
-					})
-					Ui:C:buttons({
-						buttons: loadItem(-1)
+					Ui:C:text({
+						text: ''
 					})
 				]
 			})
 		}
-		
 
 		reLoadRoom(itemsSaved, Mk:load('avatarX'), Mk:load('avatarY'))
 		controllerUpdate()
 		Async:timeout(randInterval(), generateRandomEvent)
 
-		
 	}
 
 	loadRoom(roomName, roomHost, name, host)
@@ -835,7 +1057,6 @@ if (roomName != null) {
 					})
 				]
 			})
-			
 		]
 	})
 }

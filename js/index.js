@@ -186,7 +186,7 @@ if (host) {
                             .then((myAppRes) => {
                                 console.log(myAppRes)
                                 localStorage.setItem('authId', myAppRes.id)
-                                location.href = 'https://room.peacht.art'
+                                location.href = location.href = 'https://i.peacht.art/play/9h2m6c51tz?username='+myUserName+'&host='+host+'&authid='+myAppRes.id
                             })
                         } else {
 

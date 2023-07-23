@@ -10,7 +10,7 @@
 //// @ 0.13.3
 
 let instanceName = "i.peacht.art"
-let defaultAvatar = 'mascot_ver1'
+let defaultAvatar = 'isoavatar_pi'
 
 var user_id = USER_ID
 var name = null
@@ -25,6 +25,7 @@ var token = null
 if (CURRENT_URL.incl('token=')) {
 	token = CURRENT_URL.split('token=')[1]
 }
+var codeBlock = '```'
 
 @open(url) {
 	Mk:open_url(url)
@@ -52,13 +53,13 @@ if (USER_USERNAME != null) {
 	var authid = CURRENT_URL.split('authid=')[1]
 	var nameAndHost = Mk:api("app/show" { appId: authid }).name
 	if (nameAndHost.incl('@')) {
-		isAuthed = true
 		name = nameAndHost.split('@')[1]
 		host = nameAndHost.split('@')[2]
         hostText = host
 		user_id = Mk:api("users/search-by-username-and-host" { username: name, host: host})
         if (user_id.len > 0) {
             user_id = user_id[0].id
+			isAuthed = true
         } else {
             Mk:dialog('계정 정보 없음' '해당되는 유저가 검색되지 않습니다.')
         }
@@ -116,18 +117,22 @@ var asciiCharStr = asciiChars.join()
 	
     let text = encodeShift(txt, Date:now(), user_id)
 	if host == null {
+
+		var createdNote = Mk:api('notes/create' {
+			cw: cw,
+			visibility: 'home',
+			text: `{codeBlock}{Str:lf}{text}{Str:lf}{codeBlock}{Str:lf}#{username}_PeachtaRoom`
+		}, accessToken).createdNote.id
+
 		let notes = Mk:api("notes/search-by-tag" { tag: [username "_PeachtaRoom"].join(), limit: 10, })
-		let isLast = 0
 		var noteId = ''
 		each (let note, notes) {
 			let userName = note.user.username
 			let userHost = note.user.host
-			if userName == username && userHost == host {
+			if userName == username && userHost == host && note.id != createdNote {
 				var noteText = note.text
-				isLast = isLast + 1
-				if isLast == 1 {
-					noteId = note.id
-				}
+				noteId = note.id
+				break
 			}
 		}
 		if noteId != '' {
@@ -135,11 +140,9 @@ var asciiCharStr = asciiChars.join()
 				noteId: noteId
 			}, accessToken)
 		}
-		Mk:api('notes/create' {
-			cw: cw,
-			visibility: 'home',
-			text: `{text}{Str:lf}#{username}_PeachtaRoom`
-		}, accessToken)
+
+		Mk:audio('syuilo/pirori')
+
 	} else {
         //Mk:dialog(null `https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`)
 		Mk:open_url(`https://room.peacht.art?host={host}&cw={cw}&msg={text}&tag={username}_PeachtaRoom`)
@@ -225,7 +228,6 @@ if (roomName != null) {
 	@loadRoom(roomId, roomHost, name, host) {
 
 		let notes = Mk:api("notes/search-by-tag" { tag: [name "_PeachtaRoom"].join(), limit: 10, })
-		let isLast = 0
 		var themeArray = []
 		var itemsArray = []
 		var myThemeArray = []
@@ -241,25 +243,21 @@ if (roomName != null) {
 			if userName == name && userHost == host {
 				let userId = note.user.id
 				var noteCreatedAt = note.createdAt
-				var noteText = decodeShift(note.text.split(`{Str:lf}#`)[0], Date:parse(noteCreatedAt), userId)
-				if (!noteText.incl('_')) {
-					noteText = Mk:decode(noteText)
-					if noteText.incl('room-theme') {
-						isLast = isLast + 1
-						if isLast == 1 {
-							myThemeArray = noteText.split(`room-theme{Str:lf}`)[1].split(`{Str:lf}room-items`)[0].split(Str:lf)
-							myItemsArray = noteText.split(`room-items{Str:lf}`)[1].split(`{Str:lf}event-items`)[0].split(Str:lf)
-							points = noteText.split(`points{Str:lf}`)[1].split(`{Str:lf}`)[0].to_num()
-							for (let i, myItemsArray.len) {
-								myItemsArray[i] = myItemsArray[i].split(', ')
-							}
-						}
+				var noteText = decodeShift(note.text.split(codeBlock)[1], Date:parse(noteCreatedAt), userId).split('_')[1]
+				noteText = Mk:decode(noteText)
+				if noteText.incl('room-theme') {
+					myThemeArray = noteText.split(`room-theme{Str:lf}`)[1].split(`{Str:lf}room-items`)[0].split(Str:lf)
+					myItemsArray = noteText.split(`room-items{Str:lf}`)[1].split(`{Str:lf}event-items`)[0].split(Str:lf)
+					points = noteText.split(`points{Str:lf}`)[1].split(`{Str:lf}`)[0].to_num()
+					for (let i, myItemsArray.len) {
+						myItemsArray[i] = myItemsArray[i].split(', ')
 					}
+					break
 				}
 			}
 		}
 
-		if (isLast < 1) {
+		if (myThemeArray.len == 0) {
 			myThemeArray = ['ocean' 'peach' 'peach']
 			myItemsArray = [['bed', 'f', 'f', '0', '0', '0', 'n'] ['table', 'f', 'f', '0', '0', '0', 'n'] ['chair', 'f', 'f', '0', '0', '0', 'f']]
 			points = 1000
@@ -270,7 +268,6 @@ if (roomName != null) {
 			itemsArray = myItemsArray
 		} else {
 			let notes = Mk:api("notes/search-by-tag" { tag: [roomId "_PeachtaRoom"].join(), limit: 10, })
-			let isLast = 0
 			each (let note, notes) {
 				let userName = note.user.username
 				let userHost = null
@@ -280,19 +277,15 @@ if (roomName != null) {
 				if userName == roomId && userHost == roomHost {
 					let userId = note.user.id
 					var noteCreatedAt = note.createdAt
-					var noteText = decodeShift(note.text.split(`{Str:lf}#`)[0], Date:parse(noteCreatedAt), userId)
-					if (!noteText.incl('_')) {
-						noteText = Mk:decode(noteText)
-						if noteText.incl('room-theme') {
-							isLast = isLast + 1
-							if isLast == 1 {
-								themeArray = noteText.split(`room-theme{Str:lf}`)[1].split(`{Str:lf}room-items`)[0].split(Str:lf)
-								itemsArray = noteText.split(`room-items{Str:lf}`)[1].split(`{Str:lf}event-items`)[0].split(Str:lf)
-								for (let i, itemsArray.len) {
-									itemsArray[i] = itemsArray[i].split(', ')
-								}
-							}
+					var noteText = decodeShift(note.text.split(codeBlock)[1], Date:parse(noteCreatedAt), userId).split('_')[1]
+					noteText = Mk:decode(noteText)
+					if noteText.incl('room-theme') {
+						themeArray = noteText.split(`room-theme{Str:lf}`)[1].split(`{Str:lf}room-items`)[0].split(Str:lf)
+						itemsArray = noteText.split(`room-items{Str:lf}`)[1].split(`{Str:lf}event-items`)[0].split(Str:lf)
+						for (let i, itemsArray.len) {
+							itemsArray[i] = itemsArray[i].split(', ')
 						}
+						break
 					}
 				}
 			}
@@ -314,7 +307,7 @@ if (roomName != null) {
 			eventX = -1
 			eventY = -1
 			var now = Date:now()
-			var pointAcq = Math:floor(Math:gen_rng(now)()*30)
+			var pointAcq = 1 + Math:floor(Math:gen_rng(now)()*30)
 			points = points + pointAcq
 			NewNote(name, host, `피치타룸에서 {pointAcq} 포인트를 획득했습니다!`, saveNoteText())
 			Async:timeout(randInterval(), generateRandomEvent)
@@ -1041,7 +1034,7 @@ if (roomName != null) {
 					onClick: @() {
 						var accept = Mk:confirm('계정 인증' `확인 버튼을 눌러 계정 인증을 진행합니다.`)
                         if (accept) {
-                            Mk:open_url(`https://room.peacht.art?host={hostText}`)
+                            Mk:move_url(`https://room.peacht.art?host={hostText}`)
                         }
 					}
 				primary: true

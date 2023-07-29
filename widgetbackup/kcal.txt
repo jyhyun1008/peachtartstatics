@@ -1,0 +1,117 @@
+### {
+	name: "kcal-c"
+	author: "@hyun1008@i.peacht.art"
+	version: 2
+	description: "미스키 갓생부 위젯 첫번째 시리즈 - 칼로리 계산기"
+	permissions: ["write:notes"]
+}
+
+// 기초대사량 (커스텀)
+let base_kcal = 1300 
+// 공개 범위 (퍼블릭/홈/팔로워)
+var vis = 'public' // 'public', 'home', 'followers'
+
+let myId = Mk:api("i" {}).username
+
+var FOOD = ''
+var KCAL = 0
+
+Ui:render([
+  Ui:C:container({ 
+    align: 'center'
+    children: [
+      Ui:C:mfm( { bgColor: 'grey', text: 'KCAL-C' } )
+      Ui:C:textInput({
+	      	label: "먹은 것 / 운동 종목"
+      		onInput: @(v) { FOOD = v }
+    	})
+      Ui:C:textInput({
+	      	label: "칼로리"
+      		onInput: @(v) { KCAL = v }
+    	})
+      Ui:C:button({
+		    text: "아침"
+		    onClick: @() {
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: [[`아침으로 **` `{FOOD}**을/를 먹었습니다!`].join() `칼로리: {KCAL} kcal` `#{myId}_식사일지 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`].join(Str:lf)
+          })
+		    }
+	    })
+      Ui:C:button({
+		    text: "점심"
+		    onClick: @() {
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: [[`점심으로 **` `{FOOD}**을/를 먹었습니다!`].join() `칼로리: {KCAL} kcal` `#{myId}_식사일지 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`].join(Str:lf)
+          })
+		    }
+	    })
+      Ui:C:button({
+		    text: "저녁"
+		    onClick: @() {
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: [[`저녁으로 **` `{FOOD}**을/를 먹었습니다!`].join() `칼로리: {KCAL} kcal` `#{myId}_식사일지 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`].join(Str:lf)
+          })
+		    }
+	    })
+      Ui:C:button({
+		    text: "간식"
+		    onClick: @() {
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: [[`간식으로 **` `{FOOD}**을/를 먹었습니다!`].join() `칼로리: {KCAL} kcal` `#{myId}_식사일지 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`].join(Str:lf)
+          })
+		    }
+	    })
+      Ui:C:button({
+		    text: "운동"
+		    onClick: @() {
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: [[`운동삼아 **` `{FOOD}**을/를 해보았습니다!`].join() `칼로리: -{KCAL} kcal` `#{myId}_식사일지 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`].join(Str:lf)
+          })
+		    }
+	    })
+      Ui:C:button({
+		    text: "전부 계산"
+		    onClick: @() {
+          let notes = Mk:api("notes/search-by-tag" { tag: [myId "_식사일지"].join(), limit: 50, })
+          var kcals = 0
+          let isLast = 0
+          var streak = 1
+            each (let note, notes) {
+            let userName = note.user.username
+              if userName == myId {
+                let noteCreatedAt = Date:day(Date:parse(note.createdAt)) + Date:month(Date:parse(note.createdAt)) * 100 + Date:year(Date:parse(note.createdAt)) * 10000
+                if noteCreatedAt == Date:day(Date:now()) + Date:month(Date:now()) * 100 + Date:year(Date:now()) * 10000 {
+                  if Core:type(note.text) == "str" {
+                      let noteText = note.text
+                      if noteText.incl('칼로리: ') {
+                        let kcal = note.text.split('칼로리: ')[1].split(' kcal')[0].to_num()
+                        kcals = kcals + kcal
+                      }
+                    }
+                } else if noteCreatedAt == Date:day(Date:now()) + Date:month(Date:now()) * 100 + Date:year(Date:now()) * 10000 - 1 {
+                  if Core:type(note.text) == "str" {
+                      let noteText = note.text
+                      if noteText.incl('벌써 ') {
+                        isLast = isLast + 1
+                        if isLast == 1 {
+                          streak = note.text.split('벌써 ')[1].split(' 일 연속으로')[0].to_num() + 1
+                        }
+                      }
+                  }
+                }
+              }
+            }
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: [[`오늘은 기초대사량까지 전부 합해서 **` `{(base_kcal-kcals).to_str()}** 칼로리를 소모했습니다.`].join() `벌써 {streak.to_str()}일 연속으로 기록하고 있어요!` `#{myId}_식사일지 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`].join(Str:lf)
+          })
+		    }
+	    })
+    ]
+  })
+])

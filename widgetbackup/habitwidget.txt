@@ -1,0 +1,191 @@
+### {
+	name: '피치타룸 해빗트래커'
+	author: '@hyun1008@i.peacht.art'
+	version: 1
+	description: '해빗트래커의 피치타룸 연동 버전'
+	permissions: ['write:notes']
+}
+
+// 수정해야 하는 변수 ---
+
+// 공개 범위 (퍼블릭/홈/팔로워)
+var vis = 'public' // 'public', 'home', 'followers'
+// 습관 목록 (한 줄에 하나씩)
+let HABITS = [
+  '물'
+  '산책'
+  '댄스'
+  '해금'
+  '독서'
+  '일기'
+  '작업'
+  '과제'
+]
+// 끝낸 일 에모지 - 사각형 계열로 하시는 것을 강력하게 추천드립니다.
+let emoji = '🟨'
+
+let myId = Mk:api('i' {}).username
+
+//글자길이 맞추기(4글자 이상이면 자름)
+let mHABITS = []
+each (let habit, HABITS) {
+    if (habit.len) < 4 {
+        let margin = 4 - habit.len
+        for (let i, margin) {
+            habit = `　{habit}`
+        }
+    } else if (habit.len > 4) {
+        habit = habit.slice(0, 4)
+    }
+    mHABITS.push(habit)
+}
+
+@NewNote(id, txt) {
+    var createdNote = Mk:api('notes/create' {
+        visibility: vis,
+        text: txt
+    }).createdNote.id
+
+	let notes = Mk:api('notes/search-by-tag' { tag: `{myId}_HabitTracker` })
+	var noteId = ''
+	each (let note, notes) {
+		let userName = note.user.username
+		if userName == myId && note.id != createdNote {
+			noteId = note.id
+			break
+		}
+	}
+
+	if noteId != '' {
+		Mk:api('notes/delete' {
+			noteId: noteId
+		})
+	}
+}
+
+var streak = 1
+
+@getPostButtons(habits){
+  let buttons = []
+  let notes = Mk:api('notes/search-by-tag' { tag: `{myId}_HabitTracker`, limit: 10, })
+  let isLast = 0
+  let lastNoteInterval = 0
+  let NoteInterval = 0
+  var noteTextArray = habits
+  var noteId = ''
+  streak = 1
+  each (let note, notes) {
+    let userName = note.user.username
+    if userName == myId {
+      let noteCreatedAt = Date:daysFromEpoch(Date:parse(note.createdAt))
+      NoteInterval = Date:daysFromEpoch(Date:now()) - noteCreatedAt
+      var noteText = note.text
+      if NoteInterval > 0 {
+        if noteText.incl(emoji) || noteText.incl('⬜️') {
+          isLast = isLast + 1
+          if isLast == 1 {
+            lastNoteInterval = NoteInterval
+            noteTextArray = noteText.split(Str:lf)
+            if lastNoteInterval == 1 {
+              if noteText.incl('벌써 ') {
+                streak = note.text.split('벌써 ')[1].split(' 일 연속으로')[0].to_num() + 1
+              } else {
+                streak = 2
+              }
+            }
+          }
+        }
+      } else if NoteInterval == 0 {
+        if noteText.incl(emoji) || noteText.incl('⬜️') {
+          isLast = isLast + 1
+          if isLast == 1 {
+            lastNoteInterval = NoteInterval
+            noteId = note.id
+            noteTextArray = noteText.split(Str:lf)
+            if noteText.incl('벌써 ') {
+              streak = note.text.split('벌써 ')[1].split(' 일 연속으로')[0].to_num()
+            } else {
+              streak = 1
+            }
+          }
+        }
+      }
+    }
+  }
+
+each (let habit, habits) {
+    var title = habit
+    var txt = []
+    for (let i, habits.len) {
+      txt.push(['`' mHABITS[i]])
+      txt[i].push('`')
+      txt[i].join()
+      var habitTrackArray = []
+      if (noteTextArray.incl(txt[i])) {
+        for (let j, noteTextArray.len) {
+            if (noteTextArray[j].incl(' ') && txt[i] == noteTextArray[j].split(' ')[0]) { // 같은 항목이 있는 경우 
+                habitTrackArray = noteTextArray[j].split(' ')[1].split()
+                if (Core:type(habitTrackArray) == 'str') {
+                    habitTrackArray = [habitTrackArray]
+                    
+                    if lastNoteInterval == 0 {
+                        if habits[i] == habit {
+                        if habitTrackArray[habitTrackArray.len-1] == emoji {
+                            habitTrackArray[habitTrackArray.len-1] = '⬜️'
+                        } else if habitTrackArray[habitTrackArray.len-1] == '⬜️' {
+                            habitTrackArray[habitTrackArray.len-1] = emoji
+                        }
+                        }
+                    } else if (lastNoteInterval > 0) {
+                        for (let j, lastNoteInterval - 1) {
+                        habitTrackArray.push('⬜️')
+                        }
+                        if habits[i] == habit {
+                        habitTrackArray.push(emoji)
+                        } else {
+                        habitTrackArray.push('⬜️')
+                        }
+                    }
+                    if habitTrackArray.len > 9 {
+                        habitTrackArray = habitTrackArray.slice(habitTrackArray.len - 10, habitTrackArray.len)
+                    }
+                }
+
+                break
+            }
+        }
+      } else {
+        for (let j, streak) {
+            
+            habitTrackArray.push('⬜️')
+        }
+      }
+
+      
+      txt[i].push(' ')
+      txt[i].push(habitTrackArray.join())
+      txt[i] = txt[i].join()
+    }
+    txt.push(`벌써 {streak.to_str()}일 연속으로 기록하고 있어요!`)
+    txt.push(` #{myId}_HabitTracker #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c `)
+    txt = txt.join(Str:lf)
+    buttons.push({
+      text: title
+      onClick: @() {NewNote(noteId, txt)}
+    })
+  }
+  buttons
+
+}
+
+Ui:render([
+  Ui:C:container({ 
+    align: 'center'
+    children: [
+      Ui:C:mfm( { bgColor: 'grey', text: '피치타룸 해빗트래커' } )
+      Ui:C:buttons({
+        buttons: getPostButtons(HABITS)
+      })
+    ]
+  })
+])

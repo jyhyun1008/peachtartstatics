@@ -124,7 +124,7 @@ var asciiCharStr = asciiChars.join()
 			text: `{codeBlock}{Str:lf}{text}{Str:lf}{codeBlock}{Str:lf}#{username}_PeachtaRoom`
 		}, accessToken).createdNote.id
 
-		let notes = Mk:api("notes/search-by-tag" { tag: [username "_PeachtaRoom"].join(), limit: 10, })
+		let notes = Mk:api("notes/search-by-tag" { tag: `{username}_PeachtaRoom` })
 		var noteId = ''
 		each (let note, notes) {
 			let userName = note.user.username
@@ -183,6 +183,7 @@ let roomEls = [Ui:C:container({
 
 roomEls.push(Ui:C:container({
 	align: 'center'
+	className: 'maxHeight-400 textWrap-nowrap';
 	children: [
 		Ui:C:mfm({
 			text: `nya`
@@ -667,6 +668,7 @@ if (roomName != null) {
 						text: if roomHost == null `@{roomName}@i.peacht.art님의 피치타룸` else `@{roomName}@{roomHost}님의 피치타룸`
 					})
 					Ui:C:mfm({
+	                    className: 'textWrap-nowrap-center';
 						text: `<center>{frame}{Str:lf}{items}{Str:lf}{avatarStr}</center>`
 					})
 				]

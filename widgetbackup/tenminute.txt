@@ -1,0 +1,158 @@
+### {
+	name: "kcal-c 텐미닛플래너"
+	author: "@hyun1008@i.peacht.art"
+	version: 2
+	description: "미스키 갓생부 위젯 두번째 시리즈 - 텐미닛플래너"
+	permissions: ["write:notes"]
+}
+
+// 공개 범위 (퍼블릭/홈/팔로워)
+var vis = 'public' // 'public', 'home', 'followers'
+
+let myId = Mk:api("i" {}).username
+let COLORS = [
+  '❤️'
+  '🧡'
+  '💛'
+  '💚'
+  '💙'
+  '💜'
+  '🤎'
+  '🤍'
+]
+
+//AiScript arr.len() 에 오류가 있어서 직접 정의함
+@len(array) {
+  var result = 0
+  each (let item, array) {
+    result = result + 1
+  }
+  result
+}
+
+@NewNote(txt) {
+  Mk:api('notes/create' {
+    visibility: vis,
+    text: txt
+  })
+}
+
+@getPostButtons(comments){
+  let buttons = []
+  each (let comment, comments) {
+
+    var title = comment
+    var txt = [title ` #{myId}_텐미닛 #kcal-c`].join()
+
+    buttons.push({
+      text: title
+      onClick: @() {NewNote(txt)}
+    })
+  }
+  buttons
+}
+
+Ui:render([
+  Ui:C:container({ 
+    align: 'center'
+    children: [
+      Ui:C:mfm( { bgColor: 'grey', text: 'KCAL-C 텐미닛플래너' } )
+      Ui:C:button({
+		    text: "오늘의 기록"
+		    onClick: @() {
+          
+          let notes = Mk:api("notes/search-by-tag" { tag: [myId "_텐미닛"].join(), limit: 100, })
+          let lastnote = Mk:api("notes/search-by-tag" { tag: [myId "_오늘의텐미닛"].join(), limit: 10, })
+
+          var now = Date:now() 
+          var hours = []
+          let isLast = 0
+          var streak = 1
+          
+          let noteArray = []
+          let timeArray = []
+          let ArrayLen = 0
+          timeArray.push(Date:hour(now) * 6 + Math:floor(Date:minute(now)/10))
+          noteArray.push('🖤')
+
+          each (let note, notes) {
+            let userName = note.user.username
+            if userName == myId {
+              let noteCreatedAt = Date:day(Date:parse(note.createdAt)) + Date:month(Date:parse(note.createdAt)) * 100 + Date:year(Date:parse(note.createdAt)) * 10000
+              if noteCreatedAt == Date:day(Date:now()) + Date:month(Date:now()) * 100 + Date:year(Date:now()) * 10000 {
+                if Core:type(note.text) == "str" {
+                    let noteText = note.text.split(' #')[0]
+                    timeArray.push(Date:hour(Date:parse(note.createdAt)) * 6 + Math:floor(Date:minute(Date:parse(note.createdAt))/10))
+                    noteArray.push(noteText)
+                    print(noteArray[ArrayLen+1])
+                    ArrayLen = ArrayLen + 1
+                }
+              }
+            }
+          }
+
+          each (let note, lastnote) {
+            let lastuserName = note.user.username
+            if lastuserName == myId {
+              let lastnoteCreatedAt = Date:day(Date:parse(note.createdAt)) + Date:month(Date:parse(note.createdAt)) * 100 + Date:year(Date:parse(note.createdAt)) * 10000
+              if lastnoteCreatedAt == Date:day(Date:now()) + Date:month(Date:now()) * 100 + Date:year(Date:now()) * 10000 - 1 {
+                if Core:type(note.text) == "str" {
+                  let lastnoteText = note.text
+                  if lastnoteText.incl('벌써 ') {
+                    isLast = isLast + 1
+                    if isLast == 1 {
+                      streak = note.text.split('벌써 ')[1].split(' 일 연속으로')[0].to_num() + 1
+                    }
+                  }
+                 }
+              }
+            }
+          }
+
+          var time = 0
+          for (let i, 24) {
+
+            if len(i.to_str().split()) < 2 {
+              let margin = 2 - len(i.to_str().split())
+              let houArr = []
+              for (let j, margin) {
+                houArr.push('0')
+              }
+              houArr.push(i.to_str())
+              hours.push([['`' houArr.join() '` '].join()])
+            } else {
+              hours.push([['`' i.to_str() '` '].join()])
+            }
+
+            for (let j, 6) {
+              time = time + 1
+              if time <= timeArray[ArrayLen] || time > timeArray[0] {
+                hours[i].push('🖤')
+              } else {
+                for (let k, ArrayLen) {
+                  if time > timeArray[ArrayLen - k] && time <= timeArray[ArrayLen - k - 1] {
+                    hours[i].push(noteArray[ArrayLen - k])
+                  } 
+                }
+              }
+            }
+          hours[i]=hours[i].join()
+          }
+          hours.push(`벌써 {streak.to_str()}일 연속으로 기록하고 있어요!`)
+          hours.push(` #{myId}_오늘의텐미닛 #kcal-c https://i.peacht.art/@hyun1008/pages/kcal-c`)
+          
+          hours = hours.join(Str:lf)
+
+          Mk:api('notes/create' {
+            visibility: vis,
+            text: hours
+          })
+        }
+	    })
+      Ui:C:mfm( { bgColor: 'grey', text: '지금부터 뭘 할 건가요?' } )
+      Ui:C:buttons({
+        buttons: getPostButtons(COLORS)
+      })
+    ]
+  })
+])

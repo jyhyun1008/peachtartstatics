@@ -1,0 +1,555 @@
+### {
+	name: '피치타룸 오늘의할일'
+	author: '@hyun1008@i.peacht.art'
+	version: 1
+	description: '오늘의할일 피치타룸 연동 버전'
+	permissions: ['write:notes']
+}
+
+// 공개설정
+var vis = 'public' // 'public', 'home', 'followers'
+
+// 기초대사량
+let base_kcal = 1300 
+
+//체크표시
+let check = ':checkbox_checked:'
+let uncheck = ':checkbox_unchecked:'
+let noteTitle = '**오늘의 성적표!**'
+
+let COLORS = [
+  ['❤️', '주업무']
+  ['🧡', '전공공부']
+  ['💛', '교양공부']
+  ['💚', '취미']
+  ['💙', '건강']
+  ['💜', '모임/약속']
+  ['🤎', '휴식']
+  ['🤍', '이동']
+]
+
+
+//---------------------------------------------------GENERAL VARI
+
+// 설정 끝 코드 시작~
+
+let myId = Mk:api('i' {}).username
+let resText = ''
+let streak = 1
+
+//---------------------------------------------------NOTE CREATE
+
+@NewNote(txt) {
+  Mk:api('notes/create' {
+    visibility: vis,
+    text: txt
+  })
+}
+
+@NewCWNote(cw, txt) {
+  Mk:api('notes/create' {
+    visibility: vis,
+    cw: cw,
+    text: txt
+  })
+}
+
+//---------------------------------------------------TODOLIST
+
+let todo = []
+let done = []
+let todoUi = []
+let doneUi = []
+let addtodo = ''
+let todoResText = ''
+
+@addButton(addtodo) {
+	todo.push(`{uncheck} {addtodo}`)
+	todoUi.push({
+		text: addtodo
+		onClick: @() {
+			addDone(addtodo)
+			updateTodoUi()
+		}
+		primary: true
+	})
+	Mk:save('todo' todo)
+	done = done.filter(@(item) { item != `{check} {addtodo}`})
+	doneUi = doneUi.filter(@(item) { item.text != addtodo})
+	todoResText = `{done.join(Str:lf)}{Str:lf}{todo.join(Str:lf)}`
+	Mk:save('done' done)
+
+}
+
+@addDone(addDone) {
+	done.push(`{check} {addDone}`)
+	doneUi.push({
+		text: addDone
+		onClick: @() {
+			addButton(addDone)
+			updateTodoUi()
+		}
+		primary: false
+	})
+	Mk:save('done' done)
+	todo = todo.filter(@(item) { item != `{uncheck} {addDone}`})
+	todoUi = todoUi.filter(@(item) { item.text != addDone})
+	todoResText = `{done.join(Str:lf)}{Str:lf}{todo.join(Str:lf)}`
+	Mk:save('todo' todo)
+
+}
+
+
+if (Mk:load('todo') != null) {
+	todo = Mk:load('todo')
+	each (let td, todo) {
+		todoUi.push({
+			text: td.split(`{uncheck} `)[1]
+			onClick: @() {
+				addDone(td.split(`{uncheck} `)[1])
+				updateTodoUi()
+			}
+			primary: true
+		})
+	}
+	todoResText = `{done.join(Str:lf)}{Str:lf}{todo.join(Str:lf)}`
+}
+
+if (Mk:load('done') != null) {
+	done = Mk:load('done')
+	each (let dn, done) {
+		doneUi.push({
+			text: dn.split(`{check} `)[1]
+			onClick: @() {
+				addButton(dn.split(`{check} `)[1])
+				updateTodoUi()
+			}
+			primary: false
+		})
+	}
+	todoResText = `{done.join(Str:lf)}{Str:lf}{todo.join(Str:lf)}`
+}
+
+//---------------------------------------------------TENMIN
+
+let colorButtons = []
+let hours = []
+
+@getTenMinButtons(colors) {
+  each (let color, colors) {
+
+    var title = color[1]
+    var txt = [color[0] ` #{myId}_TenMin`].join()
+
+    colorButtons.push({
+      text: title
+      onClick: @() {NewNote(txt)}
+    })
+  }
+  colorButtons
+}
+
+@searchHeartNotes(delay) {
+    let notes = Mk:api('notes/search-by-tag' { tag: `{myId}_TenMin`, limit: 100, })
+
+    var now = Date:now()
+    let noteArray = []
+    let timeArray = []
+    let ArrayLen = 0
+
+    if (delay == 0) {
+        timeArray.push(Date:hour(now) * 6 + Math:floor(Date:minute(now)/10))
+    } else {
+        timeArray.push(144)
+    }
+    
+    noteArray.push('🖤')
+
+    each (let note, notes) {
+        let userName = note.user.username
+        if userName == myId {
+            let noteCreatedAt = Date:day(Date:parse(note.createdAt)) + Date:month(Date:parse(note.createdAt)) * 100 + Date:year(Date:parse(note.createdAt)) * 10000
+            if noteCreatedAt == Date:day(Date:now()) + Date:month(Date:now()) * 100 + Date:year(Date:now()) * 10000 - delay {
+                if Core:type(note.text) == 'str' {
+                    let noteText = note.text.split(' #')[0]
+                    timeArray.push(Date:hour(Date:parse(note.createdAt)) * 6 + Math:floor(Date:minute(Date:parse(note.createdAt))/10))
+                    noteArray.push(noteText)
+                    print(noteArray[ArrayLen+1])
+                    ArrayLen = ArrayLen + 1
+                }
+            }
+        }
+    }
+
+    var time = 0
+    for (let i, 24) {
+
+        if i.to_str().len < 2 {
+            let margin = 2 - i.to_str().len
+            let houArr = []
+            for (let j, margin) {
+                houArr.push('0')
+            }
+            houArr.push(i.to_str())
+            hours.push([['`' houArr.join() '` '].join()])
+        } else {
+            hours.push([['`' i.to_str() '` '].join()])
+        }
+
+        for (let j, 6) {
+            time = time + 1
+            if time <= timeArray[ArrayLen] || time > timeArray[0] {
+                hours[i].push('🖤')
+            } else {
+                for (let k, ArrayLen) {
+                    if time > timeArray[ArrayLen - k] && time <= timeArray[ArrayLen - k - 1] {
+                        hours[i].push(noteArray[ArrayLen - k])
+                    } 
+                }
+            }
+        }
+        hours[i]=hours[i].join()
+    }
+    hours = hours.join(Str:lf)
+}
+
+//---------------------------------------------------CALORIE CALC
+
+let FOOD = ''
+let KCAL = 0
+
+let meals = ['아침' '점심' '저녁' '간식']
+
+@getMealButtons(meals, FOOD, KCAL) {
+
+    let mealButtons = []
+    each (let meal, meals) {
+    
+        var title = meal
+        var txt = `{meal}으로 **{FOOD}**을/를 먹었습니다!{Str:lf}칼로리: {KCAL} kcal{Str:lf}#{myId}_kcal-c`
+
+        mealButtons.push({
+            text: title
+            onClick: @() {
+                NewNote(txt)
+                getCalories(0)
+            }
+        })
+    }
+
+    mealButtons
+}
+
+let kcals = []
+
+@getCalories(delay) {
+
+    kcals = [0, 0, 0, 0, 0]
+    let notes = Mk:api('notes/search-by-tag' { tag: `{myId}_kcal-c`, limit: 50, })
+    each (let note, notes) {
+        let userName = note.user.username
+        let userHost = note.user.host
+        if userName == myId && userHost == null {
+            let noteCreatedAt = Date:daysFromEpoch(Date:parse(note.createdAt))
+            if (noteCreatedAt == Date:daysFromEpoch(Date:now()) - delay) {
+                if Core:type(note.text) == "str" {
+                    let noteText = note.text
+                    var mealName = note.text.split('으로')[0]
+                    var kcal = note.text.split('칼로리: ')[1].split(' kcal')[0].to_num()
+                    if (mealName == '아침') {
+                        kcals[0] = kcals[0] + kcal
+                    } else if (mealName == '점심') {
+                        kcals[1] = kcals[1] + kcal
+                    } else if (mealName == '저녁') {
+                        kcals[2] = kcals[2] + kcal
+                    } else if (mealName == '간식') {
+                        kcals[3] = kcals[3] + kcal
+                    } else { //운동
+                        kcals[4] = kcals[4] - kcal
+                    }
+                }
+            }
+        }
+    }
+    
+	Ui:get('mealchart').update({
+		children: [
+            Ui:C:customChart({
+                chartId: 'kcalchart'
+                keys: ['아침', '점심', '저녁', '간식', '운동']
+                values: kcals
+                title: '섭취 및 소모한 칼로리'
+                label: '칼로리(kcal)'
+            })
+		]
+	})
+}
+
+//---------------------------------------------------CALCULATE STREAK
+
+@calculateStreak() {
+    let notes = Mk:api('notes/search-by-tag' { tag: `{myId}_PeachtaRoomWidget`, })
+    each (let note, notes) {
+        let userName = note.user.username
+        let userHost = note.user.host
+        if userName == myId && userHost == null {
+            let noteCreatedAt = Date:daysFromEpoch(Date:parse(note.createdAt))
+            if noteCreatedAt == Date:daysFromEpoch(Date:now()) - 1 {
+                if Core:type(note.text) == "str" {
+                    let noteText = note.text
+                    if noteText.incl('벌써 ') {
+                        streak = note.text.split('벌써 ')[1].split(' 일 연속으로')[0].to_num() + 1
+                    }
+                }
+                break
+            } else if (noteCreatedAt == Date:daysFromEpoch(Date:now())) {
+                if Core:type(note.text) == "str" {
+                    let noteText = note.text
+                    if noteText.incl('벌써 ') {
+                        streak = -1
+                    }
+                }
+                break
+            }
+        }
+    }
+}
+
+//---------------------------------------------------UPDATE UI
+
+@updateTodoUi() {
+	if (doneUi.len > 0) {
+		Ui:get('tododone').update({
+			align: 'center'
+			children: [
+				Ui:C:text({
+					text: '끝낸 일'
+				})
+				Ui:C:buttons({
+					buttons: doneUi
+				})
+			]
+		})
+	} else {
+		Ui:get('tododone').update({
+			align: 'center'
+			children: [
+				Ui:C:text({
+					text: '끝낸 일이 없습니다!'
+				})
+			]
+		})
+	}
+	if (todoUi.len > 0) {
+		Ui:get('todomain').update({
+			align: 'center'
+			children: [
+				Ui:C:text({
+					text: '할 일'
+				})
+				Ui:C:buttons({
+					buttons: todoUi
+				})
+			]
+		})
+	} else {
+		Ui:get('todomain').update({
+			align: 'center'
+			children: [
+				Ui:C:text({
+					text: '할 일이 없습니다!'
+				})
+			]
+		})
+	}
+}
+
+//---------------------------------------------------ELEMENTS
+
+var uiEl = [
+    Ui:C:container({
+        align: 'center'
+        children: [
+            Ui:C:buttons({
+                buttons: [
+                    {
+                        text: '자랑하기'
+                        primary: true
+                        onClick: @() {
+                            searchHeartNotes(0)
+                            calculateStreak()
+                            if streak > 0 {
+                                resText = `{Str:lf}{todoResText}{Str:lf}{Str:lf}{hours}{Str:lf}{Str:lf}오늘 누적된 칼로리: {kcals[0]+kcals[1]+kcals[2]+kcals[3]-kcals[4]-base_kcal} kcal{Str:lf}{Str:lf}벌써 {streak} 일 연속으로 기록하고 있어요!{Str:lf}#{myId}_PeachtaRoomWidget`
+                                var willNote = Mk:confirm('노트하기' resText)
+                                if (willNote) {
+                                    NewCWNote(noteTitle, resText)
+                                }
+                            } else {
+                                Mk:dialog('노트하기' '오늘은 이미 노트했습니다.')
+                            }
+                        }
+                    } {
+                        text: '어제?'
+                        primary: false
+                        onClick: @() {
+                            searchHeartNotes(1)
+                            getCalories(1)
+                            calculateStreak()
+                            if streak > 0 {
+                                resText = `{Str:lf}{todoResText}{Str:lf}{Str:lf}{hours}{Str:lf}{Str:lf}어제 누적된 칼로리: {kcals[0]+kcals[1]+kcals[2]+kcals[3]-kcals[4]-base_kcal} kcal{Str:lf}{Str:lf}어제 기록을 까먹어서 지금 올려요...{Str:lf}#{myId}_PeachtaRoomWidget`
+                                var willNote = Mk:confirm('노트하기' resText)
+                                if (willNote) {
+                                    NewCWNote(noteTitle, resText)
+                                }
+                            } else {
+                                Mk:dialog('노트하기' '오늘은 이미 노트했습니다.')
+                            }
+                            getCalories(0)
+                        }
+                    }
+                ]
+            })
+        ]
+    }, 'header')
+	Ui:C:folder({
+        opened : false
+		title: '오늘의 할 일'
+		children: [
+			Ui:C:container({ 
+				align: 'center'
+				children: [
+					Ui:C:text({
+						text: '끝낸 일이 없습니다!'
+					})
+				]
+			}, 'tododone')
+			Ui:C:container({ 
+				align: 'center'
+				children: [
+					Ui:C:text({
+						text: '할 일이 없습니다!'
+					})
+				]
+			}, 'todomain')
+			Ui:C:container({ 
+				align: 'center'
+				children: [
+					Ui:C:textInput({
+						label: '할 일 추가하기'
+						onInput: @(v) {
+							addtodo = v
+							updateTodoUi()
+						}
+					})
+					Ui:C:button({
+						text: '추가'
+						primary: true 
+						onClick: @() {
+							addButton(addtodo)
+							updateTodoUi()
+						}
+					})
+					Ui:C:button({
+						text: '초기화'
+						onClick: @() {
+							Mk:save('todo' null)
+							Mk:save('todoUi' null)
+							Mk:save('done' null)
+							Mk:save('doneUi' null)
+							Ui:get('tododone').update({
+								align: 'center'
+								children: [
+									Ui:C:text({
+										text: '끝낸 일이 없습니다!'
+									})
+								]
+							})
+							Ui:get('todomain').update({
+								align: 'center'
+								children: [
+									Ui:C:text({
+										text: '할 일이 없습니다!'
+									})
+								]
+							})
+						}
+					})
+				]
+			}, 'todofooter')
+		]
+	}, 'todo')
+    Ui:C:folder({
+        opened: false
+        title: '텐미닛 플래너'
+        children: [
+            Ui:C:container({
+                align: 'center'
+                children: [
+                    Ui:C:mfm( { bgColor: 'grey', text: '지금부터 뭘 할 건가요?' } )
+                    Ui:C:buttons({
+                        buttons: getTenMinButtons(COLORS)
+                    })
+                ]
+            })
+        ]
+    }, 'tenmin')
+    Ui:C:folder({
+        opened: false
+        title: '칼로리 계산기'
+        children: [
+            Ui:C:container({
+                align: 'center'
+                children: [
+                    Ui:C:container({
+                        children: [
+                            Ui:C:customChart({
+                                chartId: 'kcalchart'
+                                keys: ['아침', '점심', '저녁', '간식', '운동']
+                                values: kcals
+                                title: '섭취 및 소모한 칼로리'
+                                label: '칼로리(kcal)'
+                            })
+                        ]
+                    }, 'mealchart')
+                    Ui:C:textInput({
+                        label: "먹은 것 / 운동 종목"
+                        onInput: @(v) { FOOD = v }
+                    })
+                    Ui:C:numberInput({
+                        label: "칼로리"
+                        onInput: @(v) { 
+                            KCAL = v.to_str() 
+                            Ui:get('mealbutton').update({
+                                children: [
+                                    Ui:C:buttons({
+                                        buttons: getMealButtons(meals, FOOD, KCAL)
+                                    })
+                                ]
+                            })
+                        }
+                    })
+                    Ui:C:container({
+                        align: 'center'
+                        children: [
+                        Ui:C:buttons({
+                            buttons: getMealButtons(meals, FOOD, KCAL)
+                        })
+                        ]
+                    }, 'mealbutton')
+                    Ui:C:button({
+                        text: '운동'
+                        onClick: @() {
+                            NewNote(`운동삼아 **{FOOD}**을/를 해보았습니다!{Str:lf}칼로리: -{KCAL} kcal{Str:lf}#{myId}_kcal-c`)
+                            getCalories(0)
+                        }
+                    })
+                ]
+            })
+        ]
+    }, 'kcalc')
+]
+
+Ui:render(uiEl)
+
+updateTodoUi()
+getCalories(0)

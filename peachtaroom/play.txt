@@ -1,13 +1,4 @@
-
-
-//@printnow() {
-  //let now = Date:now()
-  //print(now)
-//}
-
-//Async:interval(1000, printnow, true)
-
-//// @ 0.13.3
+//// @ 0.15.0 + piscript 0.0.3
 
 let instanceName = "i.peacht.art"
 let defaultAvatar = 'isoavatar_pi'
@@ -33,6 +24,29 @@ var codeBlock = '```'
 @move(url) {
 	Mk:move_url(url)
 }
+
+var confirmLocInfo = Mk:confirm(`위치 사용 동의` `이 플레이는 사용자의 위치를 이용합니다.`)
+var lat = Mk:geolat(confirmLocInfo)
+var lon = Mk:geolon(confirmLocInfo)
+let per1deg = 1.11195 * 100
+var homeLat = Mk:load('homeLat')
+var homeLon = Mk:load('homeLon')
+
+if (confirmLocInfo) {
+	if (homeLat == null || homeLon == null) {
+		var confirmSetHome = Mk:confirm(`집 설정` `집 위치가 설정되어있지 않습니다. 지금 위치를 집으로 설정하시겠습니까?`)
+		homeLat = lat
+		homeLon = lon
+		if (confirmSetHome) {
+			Mk:save('homeLat', homeLat)
+			Mk:save('homeLon', homeLon)
+		}
+	}
+}
+
+var distance1 = (lat - homeLat)%360 * per1deg
+var distance2 = (lon - homeLon)%360 * per1deg
+var realdistance = Math:sqrt(distance1^2 + distance2^2)
 
 if (USER_USERNAME != null) {
 	name = USER_USERNAME
@@ -183,7 +197,7 @@ let roomEls = [Ui:C:container({
 
 roomEls.push(Ui:C:container({
 	align: 'center'
-	className: 'maxHeight-400 textWrap-nowrap';
+	className: 'maxHeight-400 textWrap-nowrap-center';
 	children: [
 		Ui:C:mfm({
 			text: `nya`
@@ -381,7 +395,55 @@ if (roomName != null) {
 				}
 			}
 		]
+
+		@leftKey() {
+			if (avatarY < 7) {
+				avatarY = avatarY + 1
+				Mk:save('avatarY' avatarY)
+				if (avatarX == eventX && avatarY == eventY) {
+					endRandomEvent()
+				}
+				reLoadRoom(itemsSaved)
+			}
+		}
+		Mk:keyDown(37, leftKey)
+
+		@upKey() {
+			if (avatarX > 0) {
+				avatarX -= 1
+				Mk:save('avatarX' avatarX)
+				if (avatarX == eventX && avatarY == eventY) {
+					endRandomEvent()
+				}
+				reLoadRoom(itemsSaved)
+			}
+		}
+		Mk:keyDown(38, upKey)
+
+		@rightKey() {
+			if (avatarY > 0) {
+				avatarY -= 1
+				Mk:save('avatarY' avatarY)
+				if (avatarX == eventX && avatarY == eventY) {
+					endRandomEvent()
+				}
+				reLoadRoom(itemsSaved)
+			}
+		}
+		Mk:keyDown(39, rightKey)
 		
+		@downKey() {
+			if (avatarX < 7) {
+				avatarX = avatarX + 1
+				Mk:save('avatarX' avatarX)
+				if (avatarX == eventX && avatarY == eventY) {
+					endRandomEvent()
+				}
+				reLoadRoom(itemsSaved)
+			}
+		}
+		Mk:keyDown(40, downKey)
+
 		@loadItem(selected) {
 			var itemsButton = []
 			reLoadRoom(itemsSaved, -1, -1)
@@ -411,6 +473,17 @@ if (roomName != null) {
 											controllerUpdate()
 											reLoadRoom(itemsSaved)
                                             NewNote(name, host, `피치타룸의 인테리어를 변경했습니다!`, saveNoteText())
+										}
+									} {
+										text: '집 설정'
+										onClick: @(){
+											var confirmResetHome = Mk:confirm(`집 재설정` `지금 위치를 집으로 재설정하시겠습니까?`)
+											if (confirmResetHome) {
+												Mk:save('homeLat', homeLat)
+												Mk:save('homeLon', homeLon)
+												homeLat = lat
+												homeLon = lon
+											}
 										}
 									}
 								]
@@ -465,6 +538,15 @@ if (roomName != null) {
 													reLoadRoom(itemsSaved)
 												}
 											} {
+												text: '▲'
+												onClick: @(){
+													if (itemsSaved[i][5].to_num() < 2) {
+														itemsSaved[i][5] = itemsSaved[i][5].to_num() + 1
+														itemsSaved[i][5] = itemsSaved[i][5].to_str()
+													}
+													reLoadRoom(itemsSaved)
+												}
+											} {
 												text: '◥'
 												onClick: @(){
 													if (itemsSaved[i][4].to_num() > 0) {
@@ -484,6 +566,15 @@ if (roomName != null) {
 													if (itemsSaved[i][4].to_num() < 7) {
 														itemsSaved[i][4] = itemsSaved[i][4].to_num() + 1
 														itemsSaved[i][4] = itemsSaved[i][4].to_str()
+													}
+													reLoadRoom(itemsSaved)
+												}
+											} {
+												text: '▼'
+												onClick: @(){
+													if (itemsSaved[i][5].to_num() > 0) {
+														itemsSaved[i][5] = itemsSaved[i][5].to_num() - 1
+														itemsSaved[i][5] = itemsSaved[i][5].to_str()
 													}
 													reLoadRoom(itemsSaved)
 												}
@@ -690,15 +781,29 @@ if (roomName != null) {
 			avatarY = -1
 			Ui:get('controller').update({
 				children: [
-					Ui:C:button({
-						text: '돌아가기'
-						primary: true
-						onClick: @(){
-							avatarX = Mk:load('avatarX')
-							avatarY = Mk:load('avatarY')
-							controllerUpdate()
-							reLoadRoom(itemsSaved, avatarX, avatarY)
-						}
+					Ui:C:buttons({
+						buttons: [{
+							text: '돌아가기'
+							primary: true
+							onClick: @(){
+								avatarX = Mk:load('avatarX')
+								avatarY = Mk:load('avatarY')
+								controllerUpdate()
+								reLoadRoom(itemsSaved, avatarX, avatarY)
+							}
+						} {
+							text: '집 설정'
+							onClick: @(){
+								var confirmResetHome = Mk:confirm(`집 재설정` `지금 위치를 집으로 재설정하시겠습니까?`)
+								if (confirmResetHome) {
+									Mk:save('homeLat', homeLat)
+									Mk:save('homeLon', homeLon)
+									homeLat = lat
+									homeLon = lon
+								}
+							}
+						}]
+						
 					})
 					Ui:C:buttons({
 						buttons: loadItem(-1)
@@ -706,6 +811,8 @@ if (roomName != null) {
 				]
 			})
 		}
+
+		// 상점모드
 
 		@shop_mode() {
 
@@ -715,6 +822,8 @@ if (roomName != null) {
 			var spaceShop = []
 			var furnitureShop = []
 			var eventShop = []
+			var hiddenShop = []
+			var hidden2Shop = []
 
 			let notes = Mk:api("notes/search-by-tag" { tag: "peachtaroom-itemshop", limit: 10, })
 
@@ -736,9 +845,21 @@ if (roomName != null) {
 							}
 
 							//기능
-							var eventShopArray = note.text.split(`event{Str:lf}`)[1].split(`{Str:lf}#`)[0].split(Str:lf)
+							var eventShopArray = note.text.split(`event{Str:lf}`)[1].split(`{Str:lf}hidden1`)[0].split(Str:lf)
 							for (let i, eventShopArray.len) {
 								eventShop.push(eventShopArray[i].split(', '))
+							}
+
+							//히든1
+							var hiddenShopArray = note.text.split(`hidden1{Str:lf}`)[1].split(`{Str:lf}hidden2`)[0].split(Str:lf)
+							for (let i, hiddenShopArray.len) {
+								hiddenShop.push(hiddenShopArray[i].split(', '))
+							}
+
+							//히든2
+							var hidden2ShopArray = note.text.split(`hidden2{Str:lf}`)[1].split(`{Str:lf}#`)[0].split(Str:lf)
+							for (let i, hidden2ShopArray.len) {
+								hidden2Shop.push(hidden2ShopArray[i].split(', '))
 							}
 						}
 					}
@@ -851,6 +972,70 @@ if (roomName != null) {
 					}
 				})
 			}
+			
+			var hiddenShopButton = []
+
+			if (realdistance > 2) {
+				for (let i, hidden2Shop.len) {
+					hiddenShopButton.push({
+						text: hidden2Shop[i][1]
+						onClick: @() {
+							Ui:get('footer').update({
+								children: [
+									Ui:C:folder({
+										title: hidden2Shop[i][1]
+										children: [
+											Ui:C:mfm({
+												text: `:isoroom_{hidden2Shop[i][0]}:`
+											})
+											Ui:C:mfm({
+												text: `🪙 {hidden2Shop[i][2]}`
+											})
+											Ui:C:button({
+												text: '구입'
+												primary: true
+												onClick: @() {
+													Mk:dialog('구입' '구입 관련 함수가 들어갈 예정입니다')
+												}
+											})
+										]
+									})
+								]
+							})
+						}
+					})
+				}
+			}
+
+			for (let i, hiddenShop.len) {
+				hiddenShopButton.push({
+					text: hiddenShop[i][1]
+					onClick: @() {
+						Ui:get('footer').update({
+							children: [
+								Ui:C:folder({
+									title: hiddenShop[i][1]
+									children: [
+										Ui:C:mfm({
+											text: `:isoroom_{hiddenShop[i][0]}:`
+										})
+										Ui:C:mfm({
+											text: `🪙 {hiddenShop[i][2]}`
+										})
+										Ui:C:button({
+											text: '구입'
+											primary: true
+											onClick: @() {
+												Mk:dialog('구입' '구입 관련 함수가 들어갈 예정입니다')
+											}
+										})
+									]
+								})
+							]
+						})
+					}
+				})
+			}
 
 			@shopButtonFn(ctgr) {
 				[
@@ -913,6 +1098,18 @@ if (roomName != null) {
 					}
 				} 
 			]
+
+			if (realdistance > 1) {
+				categories.push({
+					text: "히든 상점"
+					primary: true
+					onClick: @() {
+						Ui:get('controller').update({
+							children: shopButtonFn(hiddenShopButton)
+						})
+					}
+				})
+			}
 
 			Ui:get('controller').update({
 				align: 'center'
